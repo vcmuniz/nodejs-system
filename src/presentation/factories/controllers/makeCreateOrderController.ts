@@ -1,8 +1,7 @@
 import { IOrderRepository } from "../../../domain/repositories/IOrderRepository";
-import { GetAllOrderController } from "../../../presentation/controllers/orders/GetAllOrderController";
-import { GetAllOrder } from "../../../usercase/order/GetAllOrder";
-
-export function makeGetAllOrderController(repository: IOrderRepository): GetAllOrderController {
-    const getAllOrderUseCase = new GetAllOrder(repository);
-    return new GetAllOrderController(getAllOrderUseCase)
+import { CreateOrder } from "../../../usercase/order/CreateOrder";
+import { CreateOrderController } from "../../controllers/orders/CreateOrderController";
+export function makeCreateOrderController(repository: IOrderRepository): CreateOrderController {
+    const getAllOrderUseCase = new CreateOrder(repository);
+    return new CreateOrderController(getAllOrderUseCase)
 }
