@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { IController } from "./IController";
+import { IController } from "../IController";
 import { GetAllOrder } from "../../../usercase/order/GetAllOrder";
 
 export class GetAllOrderController implements IController {

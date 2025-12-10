@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { IController } from "./IController";
+import { IController } from "../IController";
 import { GetOrderById } from "../../../usercase/order/GetOrderById";
 
 export class GetOrderByIdController implements IController {

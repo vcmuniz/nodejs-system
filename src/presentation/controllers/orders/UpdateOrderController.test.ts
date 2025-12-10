@@ -2,27 +2,28 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { Order } from '../../../domain/models/Order';
 import { IOrderRepository } from '../../../domain/repositories/IOrderRepository';
 import { makeOrderRepository } from '../../../infra/database/factories/makeOrderRepository';
-import { GetOrderById } from '../../../usercase/order/GetOrderById';
-import { GetOrderByIdController } from './GetOrderByIdController';
+import { UpdateOrder } from '../../../usercase/order/UpdateOrder';
+import { UpdateOrderController } from './UpdateOrderController';
 
-describe('GetOrderByIdController - Unit Tests', () => {
-  let controller: GetOrderByIdController;
-  let getOrderByIdUseCase: GetOrderById;
+describe('UpdateOrderController - Unit Tests', () => {
+  let controller: UpdateOrderController;
+  let updateOrderUseCase: UpdateOrder;
   let repository: IOrderRepository;
 
   beforeEach(() => {
     repository = makeOrderRepository();
-    getOrderByIdUseCase = new GetOrderById(repository);
-    controller = new GetOrderByIdController(getOrderByIdUseCase);
+    updateOrderUseCase = new UpdateOrder(repository);
+    controller = new UpdateOrderController(updateOrderUseCase);
   });
 
   describe('handle', () => {
-    it('should retrieve order by id successfully', async () => {
+    it('should update order successfully', async () => {
       const order = Order.create('user1', [{ productId: 'prod1', quantity: 1, price: 100 }]);
       await repository.create(order);
 
       const mockReq = {
         params: { id: order.id },
+        body: { status: 'shipped' },
         userId: 'user1'
       };
 
@@ -42,13 +43,14 @@ describe('GetOrderByIdController - Unit Tests', () => {
       await controller.handle(mockReq as any, mockRes as any);
 
       expect(statusCode).toBe(200);
-      expect(jsonResponse).toBeDefined();
-      expect(jsonResponse.id).toBe(order.id);
+      expect(jsonResponse.message).toBe('Order updated successfully');
+      expect(jsonResponse.order.status).toBe('shipped');
     });
 
     it('should validate id presence', async () => {
       const mockReq = {
         params: {},
+        body: { status: 'shipped' },
         userId: 'user1'
       };
 
@@ -74,6 +76,7 @@ describe('GetOrderByIdController - Unit Tests', () => {
     it('should return 404 when order not found', async () => {
       const mockReq = {
         params: { id: 'nonexistent' },
+        body: { status: 'shipped' },
         userId: 'user1'
       };
 
@@ -96,12 +99,13 @@ describe('GetOrderByIdController - Unit Tests', () => {
       expect(jsonResponse.error).toBe('Order not found');
     });
 
-    it('should return order public data without userId', async () => {
+    it('should update order status', async () => {
       const order = Order.create('user1', [{ productId: 'prod1', quantity: 1, price: 100 }]);
       await repository.create(order);
 
       const mockReq = {
         params: { id: order.id },
+        body: { status: 'completed' },
         userId: 'user1'
       };
 
@@ -116,20 +120,18 @@ describe('GetOrderByIdController - Unit Tests', () => {
 
       await controller.handle(mockReq as any, mockRes as any);
 
-      expect('userId' in jsonResponse).toBe(false);
-      expect(jsonResponse.id).toBe(order.id);
-      expect(jsonResponse.status).toBe('pending');
+      expect(jsonResponse.order.status).toBe('completed');
     });
 
-    it('should include order total in response', async () => {
+    it('should preserve total when updating status', async () => {
       const order = Order.create('user1', [
-        { productId: 'prod1', quantity: 2, price: 50 },
-        { productId: 'prod2', quantity: 3, price: 30 }
+        { productId: 'prod1', quantity: 2, price: 50 }
       ]);
       await repository.create(order);
 
       const mockReq = {
         params: { id: order.id },
+        body: { status: 'shipped' },
         userId: 'user1'
       };
 
@@ -144,18 +146,16 @@ describe('GetOrderByIdController - Unit Tests', () => {
 
       await controller.handle(mockReq as any, mockRes as any);
 
-      expect(jsonResponse.total).toBe(190);
+      expect(jsonResponse.order.total).toBe(100);
     });
 
-    it('should include order items in response', async () => {
-      const items = [
-        { productId: 'prod1', quantity: 1, price: 100 }
-      ];
-      const order = Order.create('user1', items);
+    it('should return order public data', async () => {
+      const order = Order.create('user1', [{ productId: 'prod1', quantity: 1, price: 100 }]);
       await repository.create(order);
 
       const mockReq = {
         params: { id: order.id },
+        body: { status: 'shipped' },
         userId: 'user1'
       };
 
@@ -170,7 +170,8 @@ describe('GetOrderByIdController - Unit Tests', () => {
 
       await controller.handle(mockReq as any, mockRes as any);
 
-      expect(jsonResponse.items).toEqual(items);
+      expect('userId' in jsonResponse.order).toBe(false);
+      expect(jsonResponse.order.id).toBe(order.id);
     });
   });
 });
