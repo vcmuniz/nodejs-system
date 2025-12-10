@@ -1,10 +1,11 @@
 import { Router } from "express";
-import { GetAllOrderController } from "../controllers/orders/GetAllOrderController";
+import { IOrderRepository } from "../../domain/repositories/IOrderRepository";
+import { makeGetAllOrderController } from "../factories/controllers/makeCreateOrderController";
 
-export function createOrderRoutes() {
+export function createOrderRoutes(orderRepository: IOrderRepository) {
     const router = Router();
 
-    router.get("/", GetAllOrderController.prototype.handle);
+    router.get("/", (req, res) => makeGetAllOrderController(orderRepository).handle(req, res));
 
     return router;
 }
