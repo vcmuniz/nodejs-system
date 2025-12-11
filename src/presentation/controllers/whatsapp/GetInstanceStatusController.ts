@@ -1,11 +1,12 @@
 // Controller - Apenas orquestra o use case
-import { Request, Response } from 'express';
+import { Response } from 'express';
 import { GetInstanceStatus } from '../../../usercase/whatsapp/GetInstanceStatus';
+import { AuthenticatedRequest } from '../../interfaces/AuthenticatedRequest';
 
 export class GetInstanceStatusController {
   constructor(private getInstanceStatus: GetInstanceStatus) {}
 
-  async handle(req: Request, res: Response): Promise<Response> {
+  async handle(req: AuthenticatedRequest, res: Response): Promise<Response> {
     try {
       const { instanceName } = req.params;
 

@@ -1,11 +1,12 @@
-// Controller - Apresentação da camada HTTP
-import { Request, Response } from 'express';
+// Controller - Apenas orquestra o use case
+import { Response } from 'express';
 import { SendWhatsAppMessage } from '../../../usercase/whatsapp/SendWhatsAppMessage';
+import { AuthenticatedRequest } from '../../interfaces/AuthenticatedRequest';
 
 export class SendWhatsAppMessageController {
   constructor(private sendWhatsAppMessage: SendWhatsAppMessage) {}
 
-  async handle(req: Request, res: Response): Promise<Response> {
+  async handle(req: AuthenticatedRequest, res: Response): Promise<Response> {
     try {
       const { instanceName, phoneNumber, message, mediaUrl } = req.body;
       const userId = req.user?.id;
@@ -23,9 +24,7 @@ export class SendWhatsAppMessageController {
       });
 
       if (!output.success) {
-        return res.status(400).json({
-          error: output.error,
-        });
+        return res.status(400).json({ error: output.error });
       }
 
       return res.status(200).json({

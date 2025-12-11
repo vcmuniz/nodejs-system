@@ -1,11 +1,12 @@
 // Controller - Apenas orquestra o use case
-import { Request, Response } from 'express';
+import { Response } from 'express';
 import { CreateInstance } from '../../../usercase/whatsapp/CreateInstance';
+import { AuthenticatedRequest } from '../../interfaces/AuthenticatedRequest';
 
 export class CreateInstanceController {
   constructor(private createInstance: CreateInstance) {}
 
-  async handle(req: Request, res: Response): Promise<Response> {
+  async handle(req: AuthenticatedRequest, res: Response): Promise<Response> {
     try {
       const { instanceName, number, webhookUrl } = req.body;
       const userId = req.user?.id;
