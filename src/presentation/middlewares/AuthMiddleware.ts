@@ -1,51 +1,54 @@
-// Middleware de autenticação JWT
-import { Response, NextFunction } from 'express';
-import { AuthenticatedRequest } from '../interfaces/AuthenticatedRequest';
+import { NextFunction, Request, Response } from "express";
+import { IAuthenticationValidator } from "../../domain/auth/IAuthenticationValidator";
+import { IUserFetcher } from "../../usercase/auth/CachedUserFetcher";
+import ITokenProvider from "../../domain/providers/ITokenProvider";
 
-interface TokenProvider {
-  verify(token: string): any;
-}
-
-interface UserFetcher {
-  fetchById(userId: string): Promise<any>;
+export interface AuthenticatedRequest extends Request {
+  userId?: string;
+  userEmail?: string;
 }
 
 export class AuthMiddleware {
   constructor(
-    private tokenProvider: TokenProvider,
-    private userFetcher: UserFetcher,
-  ) {}
+    private readonly tokenGenerator: ITokenProvider,
+    private readonly userFetcher: IUserFetcher
+  ) { }
 
-  handle = (req: AuthenticatedRequest, res: Response, next: NextFunction): void => {
-    try {
-      // Extrair token do header Authorization
-      const token = req.headers.authorization?.split(' ')[1];
+  authenticate() {
+    return async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+      try {
+        const token = this.extractToken(req);
+        if (!token) {
+          return res.status(401).json({ error: "Token not provided" });
+        }
 
-      if (!token) {
-        res.status(401).json({ error: 'Token não fornecido' });
-        return;
+        const decoded = await this.tokenGenerator.decodeToken(token);
+        if (!decoded) {
+          return res.status(401).json({ error: "Invalid token" });
+        }
+
+        const user = await this.userFetcher.getUserById(decoded.userId);
+        if (!user) {
+          return res.status(401).json({ error: "User not found" });
+        }
+
+        req.userId = decoded.userId;
+        req.userEmail = decoded.email;
+
+        next();
+      } catch (err) {
+        return res.status(500).json({ error: "Authentication failed" });
       }
+    };
+  }
 
-      // Verificar e decodificar token
-      const decoded = this.tokenProvider.verify(token);
+  private extractToken(req: Request): string | null {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) return null;
 
-      if (!decoded || !decoded.id) {
-        res.status(401).json({ error: 'Token inválido' });
-        return;
-      }
+    const [scheme, token] = authHeader.split(" ");
+    if (scheme !== "Bearer" || !token) return null;
 
-      // Populiar usuário no request
-      req.user = {
-        id: decoded.id,
-        email: decoded.email,
-        name: decoded.name,
-        role: decoded.role,
-      };
-
-      next();
-    } catch (error) {
-      console.error('Erro na autenticação:', error);
-      res.status(401).json({ error: 'Token inválido ou expirado' });
-    }
-  };
+    return token;
+  }
 }
