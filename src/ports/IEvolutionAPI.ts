@@ -1,44 +1,101 @@
-// Port - Interface externa
+// Port - Interface externa baseada em https://doc.evolution-api.com/v2/api-reference
 export interface SendWhatsAppMessageRequest {
-  instanceName: string;
   number: string;
-  message: string;
+  text?: string;
   mediaUrl?: string;
   mediaType?: 'image' | 'document' | 'audio' | 'video';
 }
 
 export interface SendWhatsAppMessageResponse {
-  key: {
+  key?: {
     remoteJid: string;
     fromMe: boolean;
     id: string;
   };
-  status: string;
+  status?: string;
+  message?: string;
+  error?: string;
+}
+
+export interface InstanceInfo {
+  instanceName: string;
+  status: 'open' | 'close' | 'connecting';
+  state?: 'CONNECTED' | 'DISCONNECTED' | 'CONNECTING' | 'PAIRING';
+  qrcode?: {
+    code: string;
+    base64: string;
+  };
+  profileName?: string;
+  profilePictureUrl?: string;
+  phoneNumber?: string;
+  ownerJid?: string;
+  serverUrl?: string;
+  apiUrl?: string;
+  websocketUrl?: string;
+  webhook?: {
+    url: string;
+    enabled: boolean;
+  };
+}
+
+export interface GetInstanceResponse {
+  instance: InstanceInfo;
+}
+
+export interface GetInstancesResponse {
+  instances: InstanceInfo[];
+}
+
+export interface CreateInstanceRequest {
+  instanceName: string;
+  number?: string;
+  webhook?: {
+    url: string;
+    enabled?: boolean;
+  };
+}
+
+export interface CreateInstanceResponse {
+  instance: InstanceInfo;
+}
+
+export interface ConnectInstanceResponse {
+  qrcode: {
+    code: string;
+    base64: string;
+  };
   message?: string;
 }
 
-export interface GetInstanceStatusResponse {
-  instance: {
-    instanceName: string;
-    status: string;
-    qrcode?: {
-      code: string;
-      base64: string;
-    };
-  };
+export interface DisconnectInstanceResponse {
+  message: string;
+}
+
+export interface DeleteInstanceResponse {
+  message: string;
+}
+
+export interface RestartInstanceResponse {
+  message: string;
 }
 
 export interface WebhookEventData {
   event: string;
   instance: string;
   data: Record<string, any>;
-  timestamp: number;
+  timestamp?: number;
 }
 
 export interface IEvolutionAPI {
-  sendMessage(request: SendWhatsAppMessageRequest): Promise<SendWhatsAppMessageResponse>;
-  getInstanceStatus(instanceName: string): Promise<GetInstanceStatusResponse>;
-  createInstance(instanceName: string, number: string): Promise<any>;
-  deleteInstance(instanceName: string): Promise<any>;
-  restartInstance(instanceName: string): Promise<any>;
+  // Instance Management
+  getInstance(instanceName: string): Promise<GetInstanceResponse>;
+  getInstances(): Promise<GetInstancesResponse>;
+  createInstance(request: CreateInstanceRequest): Promise<CreateInstanceResponse>;
+  connectInstance(instanceName: string): Promise<ConnectInstanceResponse>;
+  disconnectInstance(instanceName: string): Promise<DisconnectInstanceResponse>;
+  deleteInstance(instanceName: string): Promise<DeleteInstanceResponse>;
+  restartInstance(instanceName: string): Promise<RestartInstanceResponse>;
+
+  // Messaging
+  sendMessage(instanceName: string, request: SendWhatsAppMessageRequest): Promise<SendWhatsAppMessageResponse>;
 }
