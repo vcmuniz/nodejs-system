@@ -52,8 +52,10 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  businessProfiles BusinessProfile[]
-  sessions         Session[]
+  businessProfiles      BusinessProfile[]
+  sessions              Session[]
+  whatsappInstances     WhatsAppInstance[]
+  whatsappMessageLogs   WhatsAppMessageLog[]
 
   @@map("users")
 }
@@ -109,4 +111,50 @@ model Session {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("sessions")
+}
+
+model WhatsAppInstance {
+  id           String   @id @default(cuid())
+  userId       String
+  instanceName String   @unique
+  phoneNumber  String?
+  status       String   @default("close")
+  state        String   @default("DISCONNECTED")
+  qrCode       String?  @db.LongText
+  webhookUrl   String?
+
+  lastConnectedAt DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  user         User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messageLogs  WhatsAppMessageLog[]
+
+  @@index([userId])
+  @@index([instanceName])
+  @@map("whatsapp_instances")
+}
+
+model WhatsAppMessageLog {
+  id           String   @id @default(cuid())
+  userId       String
+  instanceId   String
+  remoteJid    String
+  message      String   @db.Text
+  messageId    String   @unique
+  direction    String   @default("sent")
+  status       String   @default("pending")
+  mediaUrl     String?
+  error        String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user     User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  instance WhatsAppInstance  @relation(fields: [instanceId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([instanceId])
+  @@index([messageId])
+  @@map("whatsapp_message_logs")
 }

@@ -1,5 +1,6 @@
 // Use Case - Criar instância WhatsApp
 import { IEvolutionAPI } from '../../ports/IEvolutionAPI';
+import { IWhatsAppRepository } from '../../ports/IWhatsAppRepository';
 
 export interface CreateInstanceInput {
   userId: string;
@@ -19,13 +20,17 @@ export interface CreateInstanceOutput {
 }
 
 export class CreateInstance {
-  constructor(private evolutionAPI: IEvolutionAPI) {}
+  constructor(
+    private evolutionAPI: IEvolutionAPI,
+    private whatsappRepository: IWhatsAppRepository,
+  ) {}
 
   async execute(input: CreateInstanceInput): Promise<CreateInstanceOutput> {
     try {
       this.validate(input);
 
-      const response = await this.evolutionAPI.createInstance({
+      // Criar instância na API Evolution
+      const apiResponse = await this.evolutionAPI.createInstance({
         instanceName: input.instanceName,
         number: input.number,
         webhook: input.webhookUrl
@@ -36,12 +41,24 @@ export class CreateInstance {
           : undefined,
       });
 
+      // Salvar no banco de dados
+      await this.whatsappRepository.saveInstance({
+        id: `instance_${Date.now()}`,
+        userId: input.userId,
+        instanceName: input.instanceName,
+        phoneNumber: input.number || '',
+        status: 'disconnected',
+        qrCode: undefined,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+
       return {
         success: true,
         data: {
-          instanceName: response.instance.instanceName,
-          status: response.instance.status,
-          state: response.instance.state,
+          instanceName: apiResponse.instance.instanceName,
+          status: apiResponse.instance.status,
+          state: apiResponse.instance.state,
         },
       };
     } catch (error) {
