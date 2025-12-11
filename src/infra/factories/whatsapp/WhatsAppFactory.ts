@@ -3,6 +3,7 @@ import { PrismaClient } from '@prisma/client';
 import { EvolutionAPIImpl } from '../../whatsapp/EvolutionAPIImpl';
 import { WhatsAppRepositoryImpl } from '../../whatsapp/WhatsAppRepositoryImpl';
 import { WebhookHandler } from '../../whatsapp/webhooks/WebhookHandler';
+import { WhatsAppScheduler } from '../../whatsapp/scheduler/WhatsAppScheduler';
 import { KafkaAdapter } from '../../kafka/KafkaAdapter';
 import { SendWhatsAppMessage } from '../../../usercase/whatsapp/SendWhatsAppMessage';
 import { ProcessSendWhatsAppMessage } from '../../../usercase/whatsapp/ProcessSendWhatsAppMessage';
@@ -21,6 +22,7 @@ export class WhatsAppFactory {
   private static evolutionAPI: IEvolutionAPI;
   private static whatsappRepository: IWhatsAppRepository;
   private static messageQueue: IMessageQueue;
+  private static scheduler: WhatsAppScheduler;
 
   // Use Cases
   private static sendWhatsAppMessage: SendWhatsAppMessage;
@@ -48,6 +50,25 @@ export class WhatsAppFactory {
     this.evolutionAPI = new EvolutionAPIImpl(apiKey, baseURL);
     this.whatsappRepository = new WhatsAppRepositoryImpl(prisma);
     this.messageQueue = new KafkaAdapter(kafkaBrokers);
+    this.scheduler = new WhatsAppScheduler(prisma, this.evolutionAPI);
+  }
+
+  /**
+   * Inicia o scheduler de agendamentos
+   */
+  static startScheduler(): void {
+    if (this.scheduler) {
+      this.scheduler.start();
+    }
+  }
+
+  /**
+   * Para o scheduler
+   */
+  static stopScheduler(): void {
+    if (this.scheduler) {
+      this.scheduler.stop();
+    }
   }
 
   /**
@@ -86,8 +107,7 @@ export class WhatsAppFactory {
   static getScheduleWhatsAppMessage(): ScheduleWhatsAppMessage {
     if (!this.scheduleWhatsAppMessage) {
       this.scheduleWhatsAppMessage = new ScheduleWhatsAppMessage(
-        this.whatsappRepository,
-        this.messageQueue,
+        // prisma aqui
       );
     }
     return this.scheduleWhatsAppMessage;
@@ -146,5 +166,9 @@ export class WhatsAppFactory {
 
   static getMessageQueue(): IMessageQueue {
     return this.messageQueue;
+  }
+
+  static getScheduler(): WhatsAppScheduler {
+    return this.scheduler;
   }
 }

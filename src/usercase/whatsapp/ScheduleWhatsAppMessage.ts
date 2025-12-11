@@ -1,6 +1,5 @@
 // Use Case - Agendar envio de mensagem WhatsApp
-import { IWhatsAppRepository } from '../../ports/IWhatsAppRepository';
-import { IMessageQueue } from '../../ports/IMessageQueue';
+import { PrismaClient } from '@prisma/client';
 
 export interface ScheduleWhatsAppMessageInput {
   userId: string;
@@ -19,38 +18,27 @@ export interface ScheduleWhatsAppMessageOutput {
 }
 
 export class ScheduleWhatsAppMessage {
-  constructor(
-    private whatsappRepository: IWhatsAppRepository,
-    private messageQueue: IMessageQueue,
-  ) {}
+  constructor(private prisma: PrismaClient) {}
 
   async execute(input: ScheduleWhatsAppMessageInput): Promise<ScheduleWhatsAppMessageOutput> {
     try {
-      // Validar entrada
       this.validate(input);
 
-      const scheduleId = `schedule_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-
-      // Publicar no Kafka para agendamento
-      await this.messageQueue.publish({
-        topic: 'whatsapp-schedule-message',
-        key: input.userId,
-        value: {
-          scheduleId,
+      // Salvar no banco (persistente e seguro)
+      const scheduled = await this.prisma.scheduledMessage.create({
+        data: {
           userId: input.userId,
           instanceName: input.instanceName,
           phoneNumber: input.phoneNumber,
           message: input.message,
-          mediaUrl: input.mediaUrl,
-          scheduledFor: input.scheduledFor.toISOString(),
-          createdAt: new Date().toISOString(),
+          scheduledFor: input.scheduledFor,
         },
       });
 
       return {
         success: true,
-        scheduleId,
-        scheduledFor: input.scheduledFor.toISOString(),
+        scheduleId: scheduled.id,
+        scheduledFor: scheduled.scheduledFor.toISOString(),
       };
     } catch (error) {
       console.error('Erro ao agendar mensagem WhatsApp:', error);
