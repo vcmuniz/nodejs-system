@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mariadb:11.0
+    container_name: clubfacts_mariadb
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: clubfacts_crm
+      MYSQL_USER: vortexpay
+      MYSQL_PASSWORD: vortexpaypassword
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    command: --default-authentication-plugin=mysql_native_password
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+
+volumes:
+  mysql_data:
