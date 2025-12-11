@@ -1,25 +1,25 @@
-// Controller - Obter status da instância
+// Controller - Apenas orquestra o use case
 import { Request, Response } from 'express';
-import { IEvolutionAPI } from '../../../ports/IEvolutionAPI';
+import { GetInstanceStatus } from '../../../usercase/whatsapp/GetInstanceStatus';
 
 export class GetInstanceStatusController {
-  constructor(private evolutionAPI: IEvolutionAPI) {}
+  constructor(private getInstanceStatus: GetInstanceStatus) {}
 
   async handle(req: Request, res: Response): Promise<Response> {
     try {
       const { instanceName } = req.params;
 
-      if (!instanceName) {
-        return res.status(400).json({ error: 'instanceName é obrigatório' });
+      const output = await this.getInstanceStatus.execute({ instanceName });
+
+      if (!output.success) {
+        return res.status(400).json({ error: output.error });
       }
 
-      const response = await this.evolutionAPI.getInstance(instanceName);
-
-      return res.status(200).json(response);
+      return res.status(200).json(output.data);
     } catch (error) {
       console.error('Erro no controller:', error);
       return res.status(500).json({
-        error: error instanceof Error ? error.message : 'Erro ao obter status',
+        error: 'Erro ao obter status',
       });
     }
   }

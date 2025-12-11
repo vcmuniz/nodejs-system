@@ -4,6 +4,8 @@ import { EvolutionAPIImpl } from '../../whatsapp/EvolutionAPIImpl';
 import { WhatsAppRepositoryImpl } from '../../whatsapp/WhatsAppRepositoryImpl';
 import { WebhookHandler } from '../../whatsapp/webhooks/WebhookHandler';
 import { SendWhatsAppMessage } from '../../../usercase/whatsapp/SendWhatsAppMessage';
+import { GetInstanceStatus } from '../../../usercase/whatsapp/GetInstanceStatus';
+import { CreateInstance } from '../../../usercase/whatsapp/CreateInstance';
 import { SendWhatsAppMessageController } from '../../../presentation/controllers/whatsapp/SendWhatsAppMessageController';
 import { GetInstanceStatusController } from '../../../presentation/controllers/whatsapp/GetInstanceStatusController';
 import { CreateInstanceController } from '../../../presentation/controllers/whatsapp/CreateInstanceController';
@@ -13,7 +15,13 @@ import { IWhatsAppRepository } from '../../../ports/IWhatsAppRepository';
 export class WhatsAppFactory {
   private static evolutionAPI: IEvolutionAPI;
   private static whatsappRepository: IWhatsAppRepository;
+  
+  // Use Cases
   private static sendWhatsAppMessage: SendWhatsAppMessage;
+  private static getInstanceStatus: GetInstanceStatus;
+  private static createInstance: CreateInstance;
+  
+  // Webhooks
   private static webhookHandler: WebhookHandler;
 
   /**
@@ -32,6 +40,8 @@ export class WhatsAppFactory {
     this.whatsappRepository = new WhatsAppRepositoryImpl(prisma);
   }
 
+  // ===== Use Cases =====
+
   /**
    * Obtém ou cria a instância de SendWhatsAppMessage
    */
@@ -46,6 +56,28 @@ export class WhatsAppFactory {
   }
 
   /**
+   * Obtém ou cria a instância de GetInstanceStatus
+   */
+  static getGetInstanceStatus(): GetInstanceStatus {
+    if (!this.getInstanceStatus) {
+      this.getInstanceStatus = new GetInstanceStatus(this.evolutionAPI);
+    }
+    return this.getInstanceStatus;
+  }
+
+  /**
+   * Obtém ou cria a instância de CreateInstance
+   */
+  static getCreateInstance(): CreateInstance {
+    if (!this.createInstance) {
+      this.createInstance = new CreateInstance(this.evolutionAPI);
+    }
+    return this.createInstance;
+  }
+
+  // ===== Controllers =====
+
+  /**
    * Cria controller para enviar mensagens
    */
   static getSendWhatsAppMessageController(): SendWhatsAppMessageController {
@@ -56,15 +88,17 @@ export class WhatsAppFactory {
    * Cria controller para obter status da instância
    */
   static getGetInstanceStatusController(): GetInstanceStatusController {
-    return new GetInstanceStatusController(this.evolutionAPI);
+    return new GetInstanceStatusController(this.getGetInstanceStatus());
   }
 
   /**
    * Cria controller para criar instância
    */
   static getCreateInstanceController(): CreateInstanceController {
-    return new CreateInstanceController(this.evolutionAPI);
+    return new CreateInstanceController(this.getCreateInstance());
   }
+
+  // ===== Webhooks =====
 
   /**
    * Obtém ou cria a instância de WebhookHandler
@@ -75,6 +109,8 @@ export class WhatsAppFactory {
     }
     return this.webhookHandler;
   }
+
+  // ===== Getters =====
 
   /**
    * Obtém a instância de EvolutionAPI
