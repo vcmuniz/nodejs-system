@@ -6,9 +6,11 @@ import { WebhookHandler } from '../../whatsapp/webhooks/WebhookHandler';
 import { KafkaAdapter } from '../../kafka/KafkaAdapter';
 import { SendWhatsAppMessage } from '../../../usercase/whatsapp/SendWhatsAppMessage';
 import { ProcessSendWhatsAppMessage } from '../../../usercase/whatsapp/ProcessSendWhatsAppMessage';
+import { ScheduleWhatsAppMessage } from '../../../usercase/whatsapp/ScheduleWhatsAppMessage';
 import { GetInstanceStatus } from '../../../usercase/whatsapp/GetInstanceStatus';
 import { CreateInstance } from '../../../usercase/whatsapp/CreateInstance';
 import { SendWhatsAppMessageController } from '../../../presentation/controllers/whatsapp/SendWhatsAppMessageController';
+import { ScheduleWhatsAppMessageController } from '../../../presentation/controllers/whatsapp/ScheduleWhatsAppMessageController';
 import { GetInstanceStatusController } from '../../../presentation/controllers/whatsapp/GetInstanceStatusController';
 import { CreateInstanceController } from '../../../presentation/controllers/whatsapp/CreateInstanceController';
 import { IEvolutionAPI } from '../../../ports/IEvolutionAPI';
@@ -23,6 +25,7 @@ export class WhatsAppFactory {
   // Use Cases
   private static sendWhatsAppMessage: SendWhatsAppMessage;
   private static processSendWhatsAppMessage: ProcessSendWhatsAppMessage;
+  private static scheduleWhatsAppMessage: ScheduleWhatsAppMessage;
   private static getInstanceStatus: GetInstanceStatus;
   private static createInstance: CreateInstance;
 
@@ -80,6 +83,16 @@ export class WhatsAppFactory {
     return this.processSendWhatsAppMessage;
   }
 
+  static getScheduleWhatsAppMessage(): ScheduleWhatsAppMessage {
+    if (!this.scheduleWhatsAppMessage) {
+      this.scheduleWhatsAppMessage = new ScheduleWhatsAppMessage(
+        this.whatsappRepository,
+        this.messageQueue,
+      );
+    }
+    return this.scheduleWhatsAppMessage;
+  }
+
   static getGetInstanceStatus(): GetInstanceStatus {
     if (!this.getInstanceStatus) {
       this.getInstanceStatus = new GetInstanceStatus(this.evolutionAPI);
@@ -98,6 +111,10 @@ export class WhatsAppFactory {
 
   static getSendWhatsAppMessageController(): SendWhatsAppMessageController {
     return new SendWhatsAppMessageController(this.getSendWhatsAppMessage());
+  }
+
+  static getScheduleWhatsAppMessageController(): ScheduleWhatsAppMessageController {
+    return new ScheduleWhatsAppMessageController(this.getScheduleWhatsAppMessage());
   }
 
   static getGetInstanceStatusController(): GetInstanceStatusController {
