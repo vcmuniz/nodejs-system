@@ -1,6 +1,7 @@
 // Use Case - Lógica de negócio para enviar mensagem WhatsApp
 import { IEvolutionAPI } from '../../ports/IEvolutionAPI';
 import { IWhatsAppRepository } from '../../ports/IWhatsAppRepository';
+import { IMessageQueue } from '../../ports/IMessageQueue';
 
 export interface SendWhatsAppMessageInput {
   userId: string;
@@ -21,6 +22,7 @@ export class SendWhatsAppMessage {
   constructor(
     private evolutionAPI: IEvolutionAPI,
     private whatsappRepository: IWhatsAppRepository,
+    private messageQueue: IMessageQueue,
   ) {}
 
   async execute(input: SendWhatsAppMessageInput): Promise<SendWhatsAppMessageOutput> {
@@ -28,40 +30,23 @@ export class SendWhatsAppMessage {
       // Validar entrada
       this.validate(input);
 
-      // Enviar mensagem pela Evolution API
-      const response = await this.evolutionAPI.sendMessage(input.instanceName, {
-        number: input.phoneNumber,
-        text: input.message,
-        mediaUrl: input.mediaUrl,
-      });
-
-      // Verificar se a mensagem foi enviada com sucesso
-      if (!response.key?.id) {
-        return {
-          success: false,
-          error: response.error || 'Erro ao enviar mensagem',
-        };
-      }
-
-      // Registrar no banco de dados
-      await this.whatsappRepository.logMessage({
-        id: response.key.id,
-        userId: input.userId,
-        instanceId: input.instanceName,
-        remoteJid: input.phoneNumber,
-        message: input.message,
-        messageId: response.key.id,
-        direction: 'sent',
-        status: 'sent',
-        mediaUrl: input.mediaUrl,
-        createdAt: new Date(),
-        updatedAt: new Date(),
+      // Publicar no Kafka para processamento assíncrono
+      await this.messageQueue.publish({
+        topic: 'whatsapp-send-message',
+        key: input.userId,
+        value: {
+          userId: input.userId,
+          instanceName: input.instanceName,
+          phoneNumber: input.phoneNumber,
+          message: input.message,
+          mediaUrl: input.mediaUrl,
+          timestamp: new Date().toISOString(),
+        },
       });
 
       return {
         success: true,
-        messageId: response.key.id,
-        status: response.status || 'sent',
+        status: 'queued',
       };
     } catch (error) {
       console.error('Erro ao enviar mensagem WhatsApp:', error);
