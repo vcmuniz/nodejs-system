@@ -58,6 +58,7 @@ model User {
   whatsappMessageLogs   WhatsAppMessageLog[]
 
   scheduledMessages  ScheduledMessage[]
+  scheduledTasks      ScheduledTask[]
   @@map("users")
 }
 
@@ -182,4 +183,30 @@ model ScheduledMessage {
   @@index([scheduledFor])
   @@index([status])
   @@map("scheduled_messages")
+}
+
+model ScheduledTask {
+  id           String   @id @default(cuid())
+  userId       String
+  actionType   String   // whatsapp_message, api_call, email, webhook, custom
+  payload      Json     // dados específicos da ação
+  scheduledFor DateTime
+  
+  status   String    @default("pending") // pending, processing, completed, failed
+  result   Json?     // resultado da execução
+  error    String?
+  attempts Int       @default(0)
+  maxRetries Int     @default(3)
+
+  executedAt DateTime?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([scheduledFor])
+  @@index([status])
+  @@index([actionType])
+  @@map("scheduled_tasks")
 }
