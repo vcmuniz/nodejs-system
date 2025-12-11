@@ -1,16 +1,12 @@
+import { ENV } from "../../../config/enviroments";
 import { IOrderRepository } from "../../../domain/repositories/IOrderRepository";
-import { MemoryOrderRepository } from "./repositories/memory/MemoryOrderRepository";
 import { OrderRepositoryImpl } from "./repositories/OrderRepositoryImpl";
+import { PrismaOrderRepository } from "./repositories/prisma/PrismaOrderRepository";
 
 export function makeOrderRepository(type?: string): IOrderRepository {
-    const repoType = type ?? process.env.REPO_TYPE ?? "memory";
+    const repoType = type ?? ENV.REPO_TYPE ?? "memory";
 
-    let impl: IOrderRepository;
-    switch (repoType) {
-        case "memory":
-        default:
-            impl = new MemoryOrderRepository() as IOrderRepository;
-    }
+    let impl: IOrderRepository = new PrismaOrderRepository() as IOrderRepository;
 
     return new OrderRepositoryImpl(impl)
 }
