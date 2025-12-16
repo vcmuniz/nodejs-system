@@ -25,13 +25,16 @@ export class ScheduleWhatsAppMessage {
       this.validate(input);
 
       // Salvar no banco (persistente e seguro)
-      const scheduled = await this.prisma.scheduledMessage.create({
+      const scheduled = await this.prisma.scheduled_messages.create({
         data: {
+          id: Math.random().toString(36).substring(7),
           userId: input.userId,
           instanceName: input.instanceName,
           phoneNumber: input.phoneNumber,
           message: input.message,
           scheduledFor: input.scheduledFor,
+          createdAt: new Date(),
+          updatedAt: new Date(),
         },
       });
 

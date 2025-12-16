@@ -4,33 +4,33 @@ const prisma = new PrismaClient();
 
 export class PrismaProductRepository {
     async create(data: any) {
-        return prisma.product.create({ data });
+        return prisma.products.create({ data });
     }
 
     async findById(id: string) {
-        return prisma.product.findUnique({ where: { id } });
+        return prisma.products.findUnique({ where: { id } });
     }
 
     async findBySku(sku: string, userId: string) {
-        return prisma.product.findFirst({ where: { sku, userId } });
+        return prisma.products.findFirst({ where: { sku, userId } });
     }
 
     async update(id: string, data: any) {
-        return prisma.product.update({ where: { id }, data });
+        return prisma.products.update({ where: { id }, data });
     }
 
     async delete(id: string) {
-        return prisma.product.delete({ where: { id } });
+        return prisma.products.delete({ where: { id } });
     }
 
     async findByUserId(userId: string, categoryId?: string) {
-        return prisma.product.findMany({
+        return prisma.products.findMany({
             where: { userId, ...(categoryId && { categoryId }) },
             orderBy: { createdAt: "desc" },
         });
     }
 
     async updateQuantity(id: string, quantity: number) {
-        return prisma.product.update({ where: { id }, data: { quantity } });
+        return prisma.products.update({ where: { id }, data: { quantity } });
     }
 }

@@ -6,13 +6,16 @@ export class IntegrationCredentialRepositoryImpl implements IIntegrationCredenti
   constructor(private prisma: PrismaClient) {}
 
   async create(data: CreateIntegrationCredentialDTO): Promise<IntegrationCredential> {
-    const result = await this.prisma.integrationCredential.create({
+    const result = await this.prisma.integration_credentials.create({
       data: {
+        id: Math.random().toString(36).substring(7),
         name: data.name,
         type: data.type,
-        credentials: data.credentials,
+        credentials: JSON.stringify(data.credentials),
         isActive: data.isActive ?? true,
         description: data.description,
+        createdAt: new Date(),
+        updatedAt: new Date(),
       },
     });
     
@@ -20,7 +23,7 @@ export class IntegrationCredentialRepositoryImpl implements IIntegrationCredenti
   }
 
   async findById(id: string): Promise<IntegrationCredential | null> {
-    const result = await this.prisma.integrationCredential.findUnique({
+    const result = await this.prisma.integration_credentials.findUnique({
       where: { id },
     });
     
@@ -28,7 +31,7 @@ export class IntegrationCredentialRepositoryImpl implements IIntegrationCredenti
   }
 
   async findByName(name: string): Promise<IntegrationCredential | null> {
-    const result = await this.prisma.integrationCredential.findUnique({
+    const result = await this.prisma.integration_credentials.findUnique({
       where: { name },
     });
     
@@ -36,7 +39,7 @@ export class IntegrationCredentialRepositoryImpl implements IIntegrationCredenti
   }
 
   async findByType(type: string, activeOnly: boolean = false): Promise<IntegrationCredential[]> {
-    const results = await this.prisma.integrationCredential.findMany({
+    const results = await this.prisma.integration_credentials.findMany({
       where: {
         type,
         ...(activeOnly && { isActive: true }),
@@ -48,7 +51,7 @@ export class IntegrationCredentialRepositoryImpl implements IIntegrationCredenti
   }
 
   async findAll(activeOnly: boolean = false): Promise<IntegrationCredential[]> {
-    const results = await this.prisma.integrationCredential.findMany({
+    const results = await this.prisma.integration_credentials.findMany({
       where: activeOnly ? { isActive: true } : undefined,
       orderBy: { createdAt: 'desc' },
     });
@@ -57,16 +60,23 @@ export class IntegrationCredentialRepositoryImpl implements IIntegrationCredenti
   }
 
   async update(id: string, data: UpdateIntegrationCredentialDTO): Promise<IntegrationCredential> {
-    const result = await this.prisma.integrationCredential.update({
+    const updateData: any = { updatedAt: new Date() };
+    
+    if (data.name) updateData.name = data.name;
+    if (data.credentials) updateData.credentials = JSON.stringify(data.credentials);
+    if (data.isActive !== undefined) updateData.isActive = data.isActive;
+    if (data.description !== undefined) updateData.description = data.description;
+    
+    const result = await this.prisma.integration_credentials.update({
       where: { id },
-      data,
+      data: updateData,
     });
     
     return this.mapToModel(result);
   }
 
   async delete(id: string): Promise<void> {
-    await this.prisma.integrationCredential.delete({
+    await this.prisma.integration_credentials.delete({
       where: { id },
     });
   }
@@ -76,7 +86,7 @@ export class IntegrationCredentialRepositoryImpl implements IIntegrationCredenti
       id: data.id,
       name: data.name,
       type: data.type,
-      credentials: data.credentials as Record<string, any>,
+      credentials: JSON.parse(data.credentials as string),
       isActive: data.isActive,
       description: data.description,
       createdAt: data.createdAt,

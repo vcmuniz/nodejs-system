@@ -8,16 +8,19 @@ export class PrismaMessagingRepository implements IMessagingRepository {
   constructor(private prisma: PrismaClient) {}
 
   async saveInstance(data: MessagingInstanceData): Promise<MessagingInstanceData> {
-    const instance = await this.prisma.messagingInstance.create({
+    const instance = await this.prisma.messaging_instances.create({
       data: {
+        id: data.id,
         userId: data.userId,
         channel: data.channel,
         channelInstanceId: data.channelInstanceId,
         channelPhoneOrId: data.channelPhoneOrId,
         status: data.status,
         qrCode: data.qrCode,
-        metadata: data.metadata as any,
+        metadata: JSON.stringify(data.metadata || {}),
         credentialId: data.credentialId,
+        createdAt: data.createdAt,
+        updatedAt: data.updatedAt,
       },
     });
 
@@ -29,7 +32,7 @@ export class PrismaMessagingRepository implements IMessagingRepository {
       channelPhoneOrId: instance.channelPhoneOrId,
       status: instance.status as ConnectionStatus,
       qrCode: instance.qrCode || undefined,
-      metadata: instance.metadata as Record<string, any>,
+      metadata: instance.metadata ? JSON.parse(instance.metadata as string) : {},
       credentialId: instance.credentialId || undefined,
       createdAt: instance.createdAt,
       updatedAt: instance.updatedAt,
@@ -39,7 +42,7 @@ export class PrismaMessagingRepository implements IMessagingRepository {
   }
 
   async getInstanceByUserId(userId: string, channel?: MessagingChannel): Promise<MessagingInstanceData | null> {
-    const instance = await this.prisma.messagingInstance.findFirst({
+    const instance = await this.prisma.messaging_instances.findFirst({
       where: {
         userId,
         ...(channel && { channel }),
@@ -50,7 +53,7 @@ export class PrismaMessagingRepository implements IMessagingRepository {
   }
 
   async listInstancesByUserId(userId: string, channel?: MessagingChannel): Promise<MessagingInstanceData[]> {
-    const instances = await this.prisma.messagingInstance.findMany({
+    const instances = await this.prisma.messaging_instances.findMany({
       where: {
         userId,
         ...(channel && { channel }),
@@ -61,7 +64,7 @@ export class PrismaMessagingRepository implements IMessagingRepository {
   }
 
   async getInstanceById(instanceId: string): Promise<MessagingInstanceData | null> {
-    const instance = await this.prisma.messagingInstance.findUnique({
+    const instance = await this.prisma.messaging_instances.findUnique({
       where: { id: instanceId },
     });
 
@@ -69,7 +72,7 @@ export class PrismaMessagingRepository implements IMessagingRepository {
   }
 
   async getInstanceByChannelId(channelInstanceId: string, channel: MessagingChannel): Promise<MessagingInstanceData | null> {
-    const instance = await this.prisma.messagingInstance.findFirst({
+    const instance = await this.prisma.messaging_instances.findFirst({
       where: { channelInstanceId, channel },
     });
 
@@ -77,7 +80,7 @@ export class PrismaMessagingRepository implements IMessagingRepository {
   }
 
   async updateInstanceStatus(instanceId: string, status: ConnectionStatus): Promise<void> {
-    await this.prisma.messagingInstance.update({
+    await this.prisma.messaging_instances.update({
       where: { id: instanceId },
       data: {
         status,
@@ -88,28 +91,29 @@ export class PrismaMessagingRepository implements IMessagingRepository {
   }
 
   async updateInstanceQrCode(instanceId: string, qrCode: string): Promise<void> {
-    await this.prisma.messagingInstance.update({
+    await this.prisma.messaging_instances.update({
       where: { id: instanceId },
       data: { qrCode },
     });
   }
 
   async updateInstanceMetadata(instanceId: string, metadata: Record<string, any>): Promise<void> {
-    await this.prisma.messagingInstance.update({
+    await this.prisma.messaging_instances.update({
       where: { id: instanceId },
       data: { metadata: metadata as any },
     });
   }
 
   async deleteInstance(instanceId: string): Promise<void> {
-    await this.prisma.messagingInstance.delete({
+    await this.prisma.messaging_instances.delete({
       where: { id: instanceId },
     });
   }
 
   async logMessage(data: MessagingMessage): Promise<MessagingMessage> {
-    const message = await this.prisma.messagingMessage.create({
+    const message = await this.prisma.messaging_messages.create({
       data: {
+        id: data.id,
         userId: data.userId,
         instanceId: data.instanceId,
         channel: data.channel,
@@ -123,6 +127,8 @@ export class PrismaMessagingRepository implements IMessagingRepository {
         error: data.error,
         retries: data.retries,
         maxRetries: data.maxRetries,
+        createdAt: data.createdAt,
+        updatedAt: data.updatedAt,
       },
     });
 
@@ -156,21 +162,21 @@ export class PrismaMessagingRepository implements IMessagingRepository {
     if (status === MessageStatus.DELIVERED) updates.deliveredAt = new Date();
     if (status === MessageStatus.READ) updates.readAt = new Date();
 
-    await this.prisma.messagingMessage.update({
+    await this.prisma.messaging_messages.update({
       where: { id: messageId },
       data: updates,
     });
   }
 
   async updateMessageChannelId(messageId: string, channelMessageId: string): Promise<void> {
-    await this.prisma.messagingMessage.update({
+    await this.prisma.messaging_messages.update({
       where: { id: messageId },
       data: { channelMessageId },
     });
   }
 
   async getMessageLog(userId: string, channel?: MessagingChannel, limit: number = 50): Promise<MessagingMessage[]> {
-    const messages = await this.prisma.messagingMessage.findMany({
+    const messages = await this.prisma.messaging_messages.findMany({
       where: {
         userId,
         ...(channel && { channel }),
@@ -203,7 +209,7 @@ export class PrismaMessagingRepository implements IMessagingRepository {
   }
 
   async getMessageById(messageId: string): Promise<MessagingMessage | null> {
-    const message = await this.prisma.messagingMessage.findUnique({
+    const message = await this.prisma.messaging_messages.findUnique({
       where: { id: messageId },
     });
 
@@ -231,7 +237,7 @@ export class PrismaMessagingRepository implements IMessagingRepository {
   }
 
   async updateMessageError(messageId: string, error: string, retries: number): Promise<void> {
-    await this.prisma.messagingMessage.update({
+    await this.prisma.messaging_messages.update({
       where: { id: messageId },
       data: { error, retries },
     });
@@ -246,7 +252,7 @@ export class PrismaMessagingRepository implements IMessagingRepository {
       channelPhoneOrId: instance.channelPhoneOrId,
       status: instance.status as ConnectionStatus,
       qrCode: instance.qrCode || undefined,
-      metadata: instance.metadata as Record<string, any>,
+      metadata: instance.metadata ? JSON.parse(instance.metadata as string) : {},
       credentialId: instance.credentialId || undefined,
       createdAt: instance.createdAt,
       updatedAt: instance.updatedAt,

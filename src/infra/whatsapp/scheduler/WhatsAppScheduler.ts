@@ -44,7 +44,7 @@ export class WhatsAppScheduler {
       const now = new Date();
 
       // Busca mensagens agendadas para agora ou antes
-      const pending = await this.prisma.scheduledMessage.findMany({
+      const pending = await this.prisma.scheduled_messages.findMany({
         where: {
           status: 'pending',
           scheduledFor: {
@@ -87,7 +87,7 @@ export class WhatsAppScheduler {
       }
 
       // Marcar como enviado
-      await this.prisma.scheduledMessage.update({
+      await this.prisma.scheduled_messages.update({
         where: { id: scheduled.id },
         data: {
           status: 'sent',
@@ -102,7 +102,7 @@ export class WhatsAppScheduler {
       const errorMsg = error instanceof Error ? error.message : 'Erro desconhecido';
       console.error(`[WhatsAppScheduler] ❌ Erro ao enviar ${scheduled.id}: ${errorMsg}`);
 
-      await this.prisma.scheduledMessage.update({
+      await this.prisma.scheduled_messages.update({
         where: { id: scheduled.id },
         data: {
           status: 'failed',

@@ -4,29 +4,29 @@ const prisma = new PrismaClient();
 
 export class PrismaCategoryRepository {
     async create(data: any) {
-        return prisma.category.create({ data });
+        return prisma.categories.create({ data });
     }
 
     async findById(id: string) {
-        return prisma.category.findUnique({ where: { id } });
+        return prisma.categories.findUnique({ where: { id } });
     }
 
     async findByName(name: string, userId: string) {
-        return prisma.category.findFirst({ where: { name, userId } });
+        return prisma.categories.findFirst({ where: { name, userId } });
     }
 
     async findByUserId(userId: string) {
-        return prisma.category.findMany({
+        return prisma.categories.findMany({
             where: { userId },
             orderBy: { createdAt: "desc" },
         });
     }
 
     async update(id: string, data: any) {
-        return prisma.category.update({ where: { id }, data });
+        return prisma.categories.update({ where: { id }, data });
     }
 
     async delete(id: string) {
-        return prisma.category.delete({ where: { id } });
+        return prisma.categories.delete({ where: { id } });
     }
 }

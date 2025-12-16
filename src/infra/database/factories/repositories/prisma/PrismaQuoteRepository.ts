@@ -4,48 +4,48 @@ const prisma = new PrismaClient();
 
 export class PrismaQuoteRepository {
     async create(data: any, items: any[]) {
-        return prisma.quote.create({
+        return prisma.quotes.create({
             data: {
                 ...data,
                 items: { create: items },
             },
-            include: { items: true },
+            include: { quote_items: true },
         });
     }
 
     async findById(id: string) {
-        return prisma.quote.findUnique({ where: { id }, include: { items: true } });
+        return prisma.quotes.findUnique({ where: { id }, include: { quote_items: true } });
     }
 
     async findByNumber(quoteNumber: string, userId: string) {
-        return prisma.quote.findFirst({
+        return prisma.quotes.findFirst({
             where: { quoteNumber, userId },
-            include: { items: true },
+            include: { quote_items: true },
         });
     }
 
     async findByUserId(userId: string, status?: any) {
-        return prisma.quote.findMany({
+        return prisma.quotes.findMany({
             where: { userId, ...(status && { status: status as any }) },
-            include: { items: true },
+            include: { quote_items: true },
             orderBy: { createdAt: "desc" },
         });
     }
 
     async update(id: string, data: any) {
-        return prisma.quote.update({ where: { id }, data: data as any, include: { items: true } });
+        return prisma.quotes.update({ where: { id }, data: data as any, include: { quote_items: true } });
     }
 
     async updateStatus(id: string, status: any) {
-        return prisma.quote.update({ where: { id }, data: { status: status as any }, include: { items: true } });
+        return prisma.quotes.update({ where: { id }, data: { status: status as any }, include: { quote_items: true } });
     }
 
     async delete(id: string) {
-        return prisma.quote.delete({ where: { id } });
+        return prisma.quotes.delete({ where: { id } });
     }
 
     async getNextQuoteNumber(userId: string) {
-        const last = await prisma.quote.findFirst({
+        const last = await prisma.quotes.findFirst({
             where: { userId },
             orderBy: { createdAt: "desc" },
             select: { quoteNumber: true },
