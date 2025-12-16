@@ -1,13 +1,26 @@
 import { Express, Router } from "express"
 import { makeAuthRoutes } from "./auth.routes";
 import { makeOrderRoutes } from "./order.routes";
+import { makeWhatsAppRoutes } from "./whatsapp.routes";
+import { makeMessagingRoutes } from "./messaging.routes";
 import { makeUserRepository } from "../../infra/database/factories/makeUserRepository";
 import { makeOrderRepository } from "../../infra/database/factories/makeOrderRepository";
 import JsonWebTokenProvider from "../../infra/auth/JsonWebTokenProvider";
 import { makeIndexRouter } from "./index.routes";
+import { makeProductRoutes } from "./product.routes";
+import { makeCategoryRoutes } from "./category.routes";
+import { makeStockRoutes } from "./stock.routes";
+import { makeQuoteRoutes } from "./quote.routes";
 
 export default (app: Express): void => {
     app.use("/", makeIndexRouter());
-    app.use("/auth", makeAuthRoutes(makeUserRepository(), new JsonWebTokenProvider()));
-    app.use("/orders", makeOrderRoutes(makeOrderRepository()))
+    app.use("/api/auth", makeAuthRoutes(makeUserRepository(), new JsonWebTokenProvider()));
+    app.use("/api/orders", makeOrderRoutes(makeOrderRepository()));
+    app.use("/api/whatsapp", makeWhatsAppRoutes()); // OLD - Deprecated
+    app.use("/api/messaging", makeMessagingRoutes()); // NEW - Multi-channel
+    
+    app.use("/api/inventory/products", makeProductRoutes());
+    app.use("/api/inventory/categories", makeCategoryRoutes());
+    app.use("/api/inventory/stock", makeStockRoutes());
+    app.use("/api/inventory/quotes", makeQuoteRoutes());
 }

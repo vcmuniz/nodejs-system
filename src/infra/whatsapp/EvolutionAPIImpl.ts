@@ -33,29 +33,43 @@ export class EvolutionAPIImpl implements IEvolutionAPI {
   // Instance Management Methods
   async getInstance(instanceName: string): Promise<GetInstanceResponse> {
     try {
-      const response = await this.client.get(`/instance/get/${instanceName}`);
+      console.log(`[getInstance] Buscando instância: ${instanceName}`);
+      const response = await this.client.get(`/instance/connectionState/${instanceName}`);
+      console.log(`[getInstance] Resposta:`, JSON.stringify(response.data, null, 2));
       return response.data;
     } catch (error) {
+      console.error(`[getInstance] Erro:`, error);
       this.handleError(error, `Erro ao obter instância: ${instanceName}`);
+      return { instance: {} } as GetInstanceResponse;
     }
   }
 
   async getInstances(): Promise<GetInstancesResponse> {
     try {
+      console.log('[getInstances] Chamando /instance/fetchInstances');
       const response = await this.client.get('/instance/fetchInstances');
+      console.log('[getInstances] Response recebida:', JSON.stringify(response.data, null, 2));
       return response.data;
     } catch (error) {
+      console.error('[getInstances] Erro na chamada:', error);
       this.handleError(error, 'Erro ao listar instâncias');
+      return { instances: [] } as GetInstancesResponse;
     }
   }
 
   async createInstance(request: CreateInstanceRequest): Promise<CreateInstanceResponse> {
     try {
-      const response = await this.client.post('/instance/create', {
+      const payload: any = {
         instanceName: request.instanceName,
-        number: request.number,
-        webhook: request.webhook,
-      });
+        integration: request.integration || 'WHATSAPP-BAILEYS',
+      };
+
+      if (request.number) {
+        payload.number = request.number;
+      }
+
+      console.log('[createInstance] Enviando payload:', JSON.stringify(payload, null, 2));
+      const response = await this.client.post('/instance/create', payload);
       return response.data;
     } catch (error) {
       this.handleError(error, 'Erro ao criar instância');
@@ -65,6 +79,7 @@ export class EvolutionAPIImpl implements IEvolutionAPI {
   async connectInstance(instanceName: string): Promise<ConnectInstanceResponse> {
     try {
       const response = await this.client.get(`/instance/connect/${instanceName}`);
+      console.log(`[connectInstance] Resposta da Evolution API:`, JSON.stringify(response.data, null, 2));
       return response.data;
     } catch (error) {
       this.handleError(error, 'Erro ao conectar instância');
@@ -98,6 +113,26 @@ export class EvolutionAPIImpl implements IEvolutionAPI {
     }
   }
 
+  async setWebhook(instanceName: string, webhookUrl: string): Promise<any> {
+    try {
+      console.log(`[setWebhook] Configurando webhook para: ${instanceName}`);
+      const response = await this.client.post(`/webhook/set/${instanceName}`, {
+        webhook: {
+          url: webhookUrl,
+          enabled: true,
+          webhookByEvents: true,
+          webhookBase64: false,
+          events: ['MESSAGES_UPSERT', 'MESSAGES_UPDATE', 'CONNECTION_UPDATE', 'QRCODE_UPDATED'],
+        }
+      });
+      console.log(`[setWebhook] Resposta:`, response.data);
+      return response.data;
+    } catch (error) {
+      console.error(`[setWebhook] Erro:`, error);
+      this.handleError(error, 'Erro ao configurar webhook');
+    }
+  }
+
   // Messaging Methods
   async sendMessage(
     instanceName: string,
@@ -122,14 +157,51 @@ export class EvolutionAPIImpl implements IEvolutionAPI {
       const status = error.response?.status;
       const data = error.response?.data;
 
+      let errorMessage = 'Unknown error';
+
+      // Log para debug - mostra toda a resposta
+      console.log('[handleError] Raw response data:', JSON.stringify(data, null, 2));
+      console.log('[handleError] Error config:', {
+        url: error.config?.url,
+        method: error.config?.method,
+        data: error.config?.data,
+      });
+
+      try {
+        // Tenta extrair mensagem de erro em diferentes formatos
+        const messageField = data?.response?.message;
+
+        if (messageField) {
+          if (Array.isArray(messageField) && messageField.length > 0) {
+            errorMessage = messageField.map(String).join(', ');
+          } else if (typeof messageField === 'string' && messageField.length > 0) {
+            errorMessage = messageField;
+          } else if (typeof messageField === 'object') {
+            errorMessage = JSON.stringify(messageField);
+          }
+        } else if (data?.message) {
+          if (Array.isArray(data.message) && data.message.length > 0) {
+            errorMessage = data.message.map(String).join(', ');
+          } else if (typeof data.message === 'string' && data.message.length > 0) {
+            errorMessage = data.message;
+          } else {
+            errorMessage = JSON.stringify(data.message);
+          }
+        } else if (error.message) {
+          errorMessage = error.message;
+        }
+      } catch (e) {
+        errorMessage = `Error parsing: ${String(e)}`;
+      }
+
       console.error(`[EvolutionAPI Error] ${customMessage}`, {
         status,
         statusText: error.response?.statusText,
-        data,
+        errorMessage,
       });
 
       throw new Error(
-        `${customMessage}: ${status} - ${data?.message || error.message || 'Unknown error'}`,
+        `${customMessage}: ${status} - ${errorMessage}`,
       );
     }
 

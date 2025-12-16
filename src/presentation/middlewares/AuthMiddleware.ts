@@ -2,11 +2,7 @@ import { NextFunction, Request, Response } from "express";
 import { IAuthenticationValidator } from "../../domain/auth/IAuthenticationValidator";
 import { IUserFetcher } from "../../usercase/auth/CachedUserFetcher";
 import ITokenProvider from "../../domain/providers/ITokenProvider";
-
-export interface AuthenticatedRequest extends Request {
-  userId?: string;
-  userEmail?: string;
-}
+import { AuthenticatedRequest } from "../interfaces/AuthenticatedRequest";
 
 export class AuthMiddleware {
   constructor(
@@ -32,8 +28,10 @@ export class AuthMiddleware {
           return res.status(401).json({ error: "User not found" });
         }
 
-        req.userId = decoded.userId;
-        req.userEmail = decoded.email;
+        req.user = {
+          id: decoded.userId,
+          email: decoded.email,
+        };
 
         next();
       } catch (err) {

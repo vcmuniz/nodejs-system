@@ -23,7 +23,7 @@ export class CreateInstance {
   constructor(
     private evolutionAPI: IEvolutionAPI,
     private whatsappRepository: IWhatsAppRepository,
-  ) {}
+  ) { }
 
   async execute(input: CreateInstanceInput): Promise<CreateInstanceOutput> {
     try {
@@ -35,9 +35,14 @@ export class CreateInstance {
         number: input.number,
         webhook: input.webhookUrl
           ? {
-              url: input.webhookUrl,
-              enabled: true,
-            }
+            "enabled": true,
+            "byEvents": true,
+            "base64": false,
+            "events": [
+              "APPLICATION_STARTUP"
+            ],
+            "url": input.webhookUrl,
+          }
           : undefined,
       });
 

@@ -49,9 +49,13 @@ export interface GetInstancesResponse {
 export interface CreateInstanceRequest {
   instanceName: string;
   number?: string;
+  integration?: string;
   webhook?: {
     url: string;
-    enabled?: boolean;
+    enabled: boolean;
+    byEvents: boolean;
+    base64: boolean;
+    events: string[];
   };
 }
 
@@ -95,6 +99,7 @@ export interface IEvolutionAPI {
   disconnectInstance(instanceName: string): Promise<DisconnectInstanceResponse>;
   deleteInstance(instanceName: string): Promise<DeleteInstanceResponse>;
   restartInstance(instanceName: string): Promise<RestartInstanceResponse>;
+  setWebhook(instanceName: string, webhookUrl: string): Promise<any>;
 
   // Messaging
   sendMessage(instanceName: string, request: SendWhatsAppMessageRequest): Promise<SendWhatsAppMessageResponse>;

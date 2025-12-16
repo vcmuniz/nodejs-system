@@ -77,6 +77,30 @@ export class WhatsAppRepositoryImpl implements IWhatsAppRepository {
     }
   }
 
+  async listInstancesByUserId(userId: string): Promise<WhatsAppInstanceData[]> {
+    try {
+      const instances = await this.prisma.whatsAppInstance.findMany({
+        where: { userId },
+        orderBy: { createdAt: 'desc' },
+      });
+
+      return instances.map(instance => ({
+        id: instance.id,
+        userId: instance.userId,
+        instanceName: instance.instanceName,
+        phoneNumber: instance.phoneNumber || '',
+        status: this.mapStatusFromDb(instance.state),
+        qrCode: instance.qrCode || undefined,
+        createdAt: instance.createdAt,
+        updatedAt: instance.updatedAt,
+        lastConnectedAt: instance.lastConnectedAt || undefined,
+      }));
+    } catch (error) {
+      console.error('Erro ao listar instâncias por usuário:', error);
+      throw error;
+    }
+  }
+
   async getInstanceByName(instanceName: string): Promise<WhatsAppInstanceData | null> {
     try {
       const instance = await this.prisma.whatsAppInstance.findUnique({
@@ -118,6 +142,21 @@ export class WhatsAppRepositoryImpl implements IWhatsAppRepository {
       });
     } catch (error) {
       console.error('Erro ao atualizar status da instância:', error);
+      throw error;
+    }
+  }
+
+  async updateInstanceQrCode(instanceName: string, qrCode: string): Promise<void> {
+    try {
+      await this.prisma.whatsAppInstance.updateMany({
+        where: { instanceName },
+        data: {
+          qrCode,
+          updatedAt: new Date(),
+        },
+      });
+    } catch (error) {
+      console.error('Erro ao atualizar QR code da instância:', error);
       throw error;
     }
   }

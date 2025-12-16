@@ -23,6 +23,7 @@ export class WhatsAppFactory {
   private static whatsappRepository: IWhatsAppRepository;
   private static messageQueue: IMessageQueue;
   private static scheduler: WhatsAppScheduler;
+  private static prisma: PrismaClient;
 
   // Use Cases
   private static sendWhatsAppMessage: SendWhatsAppMessage;
@@ -39,6 +40,7 @@ export class WhatsAppFactory {
    * @param prisma Cliente Prisma
    */
   static initialize(prisma: PrismaClient): void {
+    this.prisma = prisma;
     const apiKey = process.env.EVOLUTION_API_KEY || '';
     const baseURL = process.env.EVOLUTION_API_URL || 'http://localhost:8080';
     const kafkaBrokers = (process.env.KAFKA_BROKERS || 'localhost:9092').split(',');
@@ -106,16 +108,14 @@ export class WhatsAppFactory {
 
   static getScheduleWhatsAppMessage(): ScheduleWhatsAppMessage {
     if (!this.scheduleWhatsAppMessage) {
-      this.scheduleWhatsAppMessage = new ScheduleWhatsAppMessage(
-        // prisma aqui
-      );
+      this.scheduleWhatsAppMessage = new ScheduleWhatsAppMessage(this.prisma);
     }
     return this.scheduleWhatsAppMessage;
   }
 
   static getGetInstanceStatus(): GetInstanceStatus {
     if (!this.getInstanceStatus) {
-      this.getInstanceStatus = new GetInstanceStatus(this.evolutionAPI);
+      this.getInstanceStatus = new GetInstanceStatus(this.evolutionAPI, this.whatsappRepository);
     }
     return this.getInstanceStatus;
   }

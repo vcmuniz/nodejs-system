@@ -30,8 +30,10 @@ export interface IWhatsAppRepository {
   // Instance methods
   saveInstance(data: WhatsAppInstanceData): Promise<WhatsAppInstanceData>;
   getInstanceByUserId(userId: string): Promise<WhatsAppInstanceData | null>;
+  listInstancesByUserId(userId: string): Promise<WhatsAppInstanceData[]>;
   getInstanceByName(instanceName: string): Promise<WhatsAppInstanceData | null>;
   updateInstanceStatus(instanceName: string, status: WhatsAppInstanceData['status']): Promise<void>;
+  updateInstanceQrCode(instanceName: string, qrCode: string): Promise<void>;
   deleteInstance(instanceName: string): Promise<void>;
 
   // Message log methods
