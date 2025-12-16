@@ -4,7 +4,7 @@ import prisma from '../../../prisma';
 
 export class PrismaUserRepository implements IUserRepository {
     async findByEmail(email: string): Promise<User | null> {
-        const user = await prisma.user.findUnique({
+        const user = await prisma.users.findUnique({
             where: { email }
         });
 
@@ -12,11 +12,11 @@ export class PrismaUserRepository implements IUserRepository {
 
         if (!user) return null;
 
-        return new User(user.id, user.email, user.password || '', user.name);
+        return new User(user.id, user.email, user.password || '', user.name, user.role);
     }
 
     async save(user: User): Promise<User> {
-        const saved = await prisma.user.upsert({
+        const saved = await prisma.users.upsert({
             where: { email: user.email },
             update: {
                 name: user.name,
@@ -27,21 +27,21 @@ export class PrismaUserRepository implements IUserRepository {
                 email: user.email,
                 password: user.password,
                 name: user.name,
-                role: 'USER',
+                role: user.role || 'USER',
                 status: 'ACTIVE'
             }
         });
 
-        return new User(saved.id, saved.email, saved.password || '', saved.name);
+        return new User(saved.id, saved.email, saved.password || '', saved.name, saved.role);
     }
 
     async findById(id: string): Promise<User | null> {
-        const user = await prisma.user.findUnique({
+        const user = await prisma.users.findUnique({
             where: { id }
         });
 
         if (!user) return null;
 
-        return new User(user.id, user.email, user.password || '', user.name);
+        return new User(user.id, user.email, user.password || '', user.name, user.role);
     }
 }
