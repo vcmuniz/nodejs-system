@@ -27,7 +27,7 @@ export class PrismaUserRepository implements IUserRepository {
                 email: user.email,
                 password: user.password,
                 name: user.name,
-                role: user.role || 'USER',
+                role: (user.role as any) || 'USER',
                 status: 'ACTIVE'
             }
         });
