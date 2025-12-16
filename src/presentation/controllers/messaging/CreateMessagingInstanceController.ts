@@ -7,7 +7,7 @@ import { MessagingChannel } from '../../../domain/messaging/MessagingChannel';
 export class CreateMessagingInstanceController {
   async handle(req: AuthenticatedRequest, res: Response): Promise<Response> {
     try {
-      const { channel, channelInstanceId, channelPhoneOrId, credentials } = req.body;
+      const { channel, channelInstanceId, channelPhoneOrId, credentials, credentialId } = req.body;
       const userId = req.user?.id;
 
       if (!userId) {
@@ -26,12 +26,15 @@ export class CreateMessagingInstanceController {
         channel: channel as MessagingChannel,
         channelInstanceId,
         channelPhoneOrId,
-        credentials,
+        credentials, // Agora opcional - se não passar, busca automaticamente
+        credentialId, // Opcional - forçar credencial específica
       });
 
       return res.status(201).json({
         success: true,
-        message: 'Instância criada com sucesso',
+        message: credentials 
+          ? 'Instância criada com credenciais customizadas' 
+          : 'Instância criada com credenciais do sistema',
         data: result,
       });
     } catch (error: any) {

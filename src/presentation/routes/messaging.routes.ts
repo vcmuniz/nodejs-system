@@ -59,7 +59,15 @@ import { makeAuthMiddleware } from '../factories/middlewares/makeAuthMiddleware'
  *     tags:
  *       - Messaging (Multi-Channel)
  *     summary: Create a new messaging instance
- *     description: Create and connect a new messaging instance for any supported channel
+ *     description: |
+ *       Create and connect a new messaging instance for any supported channel.
+ *       
+ *       **Credentials are now OPTIONAL!**
+ *       
+ *       If you don't pass credentials, the system will automatically use the credentials 
+ *       configured by the administrator for that channel type.
+ *       
+ *       You can also optionally specify a `credentialId` to use a specific credential.
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -81,12 +89,43 @@ import { makeAuthMiddleware } from '../factories/middlewares/makeAuthMiddleware'
  *                 description: Phone number for WhatsApp, ID for Telegram, email for Email, etc.
  *               credentials:
  *                 type: object
- *                 example: { "token": "evolution-api-token" }
- *                 description: Optional credentials specific to the channel
+ *                 example: { "apiToken": "custom-token", "baseUrl": "http://custom-server" }
+ *                 description: |
+ *                   **OPTIONAL** - Custom credentials for this instance. 
+ *                   If not provided, system will use admin-configured credentials automatically.
+ *               credentialId:
+ *                 type: string
+ *                 example: 'cred_evolution_clubfacts_2025'
+ *                 description: |
+ *                   **OPTIONAL** - Force use of a specific credential by ID.
+ *                   If not provided, system will use the first active credential for the channel.
  *             required:
  *               - channel
  *               - channelInstanceId
  *               - channelPhoneOrId
+ *           examples:
+ *             withoutCredentials:
+ *               summary: Create instance without credentials (uses system defaults)
+ *               value:
+ *                 channel: whatsapp_evolution
+ *                 channelInstanceId: my-store
+ *                 channelPhoneOrId: '5585999999999'
+ *             withCustomCredentials:
+ *               summary: Create instance with custom credentials
+ *               value:
+ *                 channel: whatsapp_evolution
+ *                 channelInstanceId: my-store
+ *                 channelPhoneOrId: '5585999999999'
+ *                 credentials:
+ *                   apiToken: custom-token
+ *                   baseUrl: http://my-evolution-server:8080
+ *             withSpecificCredentialId:
+ *               summary: Create instance using specific credential
+ *               value:
+ *                 channel: whatsapp_evolution
+ *                 channelInstanceId: my-store
+ *                 channelPhoneOrId: '5585999999999'
+ *                 credentialId: cred_evolution_clubfacts_2025
  *     responses:
  *       201:
  *         description: Messaging instance created successfully

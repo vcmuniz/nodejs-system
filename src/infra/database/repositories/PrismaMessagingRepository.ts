@@ -17,6 +17,7 @@ export class PrismaMessagingRepository implements IMessagingRepository {
         status: data.status,
         qrCode: data.qrCode,
         metadata: data.metadata as any,
+        credentialId: data.credentialId,
       },
     });
 
@@ -29,6 +30,7 @@ export class PrismaMessagingRepository implements IMessagingRepository {
       status: instance.status as ConnectionStatus,
       qrCode: instance.qrCode || undefined,
       metadata: instance.metadata as Record<string, any>,
+      credentialId: instance.credentialId || undefined,
       createdAt: instance.createdAt,
       updatedAt: instance.updatedAt,
       lastConnectedAt: instance.lastConnectedAt || undefined,
@@ -245,6 +247,7 @@ export class PrismaMessagingRepository implements IMessagingRepository {
       status: instance.status as ConnectionStatus,
       qrCode: instance.qrCode || undefined,
       metadata: instance.metadata as Record<string, any>,
+      credentialId: instance.credentialId || undefined,
       createdAt: instance.createdAt,
       updatedAt: instance.updatedAt,
       lastConnectedAt: instance.lastConnectedAt || undefined,

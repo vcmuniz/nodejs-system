@@ -7,84 +7,18 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum UserRole {
-  USER
-  SELLER
-  ADMIN
-}
-
-enum AuthProvider {
-  LOCAL
-  GOOGLE
-  FACEBOOK
-}
-
-enum PersonType {
-  PF
-  PJ
-}
-
-enum BusinessProfileStatus {
-  UNVERIFIED
-  VERIFIED
-  CANCELLED
-}
-
-model User {
-  id           String        @id @default(cuid())
-  email        String        @unique
-  name         String
-  password     String?
-  avatar       String?
-  phone        String?
-  cpf          String?       @unique
-  birthDate    DateTime?
-  whatsapp     String?
-  instagram    String?
-  facebook     String?
-  role         UserRole      @default(USER)
-  provider     AuthProvider? @default(LOCAL)
-  providerId   String?
-  status       String        @default("ACTIVE")
-  isVerified   Boolean       @default(false)
-  isActive     Boolean       @default(true)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  businessProfiles      BusinessProfile[]
-  sessions              Session[]
-  whatsappInstances     WhatsAppInstance[]
-  whatsappMessageLogs   WhatsAppMessageLog[]
-
-  messagingInstances    MessagingInstance[]
-  messagingMessages     MessagingMessage[]
-
-  scheduledMessages  ScheduledMessage[]
-  scheduledTasks      ScheduledTask[]
-  
-  categories Category[]
-  products   Product[]
-  quotes     Quote[]
-  stockEntries StockEntry[]
-  @@map("users")
-}
-
-model BusinessProfile {
-  id     String @id @default(cuid())
-  userId String
-
-  personType PersonType @default(PJ)
-  status     BusinessProfileStatus @default(UNVERIFIED)
-
-  cpf String? @unique
-  companyName String?
-  cnpj        String? @unique
-  tradingName String?
-  description String? @db.Text
-  companyLogo String?
-  categories  String?
-
+model business_profiles {
+  id           String                       @id
+  userId       String
+  personType   business_profiles_personType @default(PJ)
+  status       business_profiles_status     @default(UNVERIFIED)
+  cpf          String?                      @unique
+  companyName  String?
+  cnpj         String?                      @unique
+  tradingName  String?
+  description  String?                      @db.Text
+  companyLogo  String?
+  categories   String?
   cep          String?
   street       String?
   number       String?
@@ -94,307 +28,321 @@ model BusinessProfile {
   state        String?
   latitude     Float?
   longitude    Float?
-
-  instagram String?
-  facebook  String?
-  whatsapp  String?
-  website   String?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  instagram    String?
+  facebook     String?
+  whatsapp     String?
+  website      String?
+  createdAt    DateTime                     @default(now())
+  updatedAt    DateTime
+  users        users                        @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
-  @@map("business_profiles")
 }
 
-model Session {
-  id           String   @id @default(cuid())
-  userId       String
-  accessToken  String   @unique
-  refreshToken String   @unique
-  expiresAt    DateTime
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@map("sessions")
-}
-
-model WhatsAppInstance {
-  id           String   @id @default(cuid())
-  userId       String
-  instanceName String   @unique
-  phoneNumber  String?
-  status       String   @default("close")
-  state        String   @default("DISCONNECTED")
-  qrCode       String?  @db.LongText
-  webhookUrl   String?
-
-  lastConnectedAt DateTime?
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-
-  user         User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  messageLogs  WhatsAppMessageLog[]
-
-  @@index([userId])
-  @@index([instanceName])
-  @@map("whatsapp_instances")
-}
-
-model WhatsAppMessageLog {
-  id           String   @id @default(cuid())
-  userId       String
-  instanceId   String
-  remoteJid    String
-  message      String   @db.Text
-  messageId    String   @unique
-  direction    String   @default("sent")
-  status       String   @default("pending")
-  mediaUrl     String?
-  error        String?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  user     User              @relation(fields: [userId], references: [id], onDelete: Cascade)
-  instance WhatsAppInstance  @relation(fields: [instanceId], references: [id], onDelete: Cascade)
-
-  @@index([userId])
-  @@index([instanceId])
-  @@index([messageId])
-  @@map("whatsapp_message_logs")
-}
-
-// Nova tabela genérica para instâncias de messageria (WhatsApp, SMS, Email, Telegram, etc)
-model MessagingInstance {
-  id                  String   @id @default(cuid())
-  userId              String
-  channel             String   // 'whatsapp', 'sms', 'email', 'telegram', 'facebook'
-  channelInstanceId   String   // ID único no canal (nome da instância, ID do bot, etc)
-  channelPhoneOrId    String   // Telefone para WhatsApp, ID para Telegram, email, etc
-  status              String   @default("pending") // pending, connecting, connected, disconnected, error
-  qrCode              String?  @db.LongText
-  metadata            Json?    // Dados específicos do canal em JSON
-  lastConnectedAt     DateTime?
-  lastDisconnectedAt  DateTime?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  user            User               @relation(fields: [userId], references: [id], onDelete: Cascade)
-  messagingMessages MessagingMessage[]
-
-  @@unique([channel, channelInstanceId])
-  @@index([userId])
-  @@index([channel])
-  @@index([status])
-  @@map("messaging_instances")
-}
-
-// Nova tabela genérica para logs de mensagens (substitui WhatsAppMessageLog eventualmente)
-model MessagingMessage {
-  id               String   @id @default(cuid())
-  userId           String
-  instanceId       String
-  channel          String   // 'whatsapp', 'sms', 'email', 'telegram', 'facebook'
-  remoteJid        String   // Destinatário: número, ID, email, etc
-  message          String   @db.Text
-  channelMessageId String?  // ID gerado pelo canal
-  direction        String   @default("sent") // sent, received
-  status           String   @default("pending") // pending, sent, delivered, read, failed
-  mediaUrl         String?
-  mediaType        String?  // image, audio, document, video
-  error            String?
-  retries          Int      @default(0)
-  maxRetries       Int      @default(3)
-  sentAt           DateTime?
-  deliveredAt      DateTime?
-  readAt           DateTime?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  user     User              @relation(fields: [userId], references: [id], onDelete: Cascade)
-  instance MessagingInstance @relation(fields: [instanceId], references: [id], onDelete: Cascade)
-
-  @@unique([channelMessageId])
-  @@index([userId])
-  @@index([instanceId])
-  @@index([channel])
-  @@index([status])
-  @@map("messaging_messages")
-}
-
-model ScheduledMessage {
-  id           String   @id @default(cuid())
-  userId       String
-  instanceName String
-  phoneNumber  String
-  message      String   @db.Text
-  scheduledFor DateTime
-  
-  status   String    @default("pending") // pending, sent, failed
-  sentAt   DateTime?
-  error    String?
-  messageId String?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId])
-  @@index([scheduledFor])
-  @@index([status])
-  @@map("scheduled_messages")
-}
-
-model ScheduledTask {
-  id           String   @id @default(cuid())
-  userId       String
-  actionType   String   // whatsapp_message, api_call, email, webhook, custom
-  payload      Json     // dados específicos da ação
-  scheduledFor DateTime
-  
-  status   String    @default("pending") // pending, processing, completed, failed
-  result   Json?     // resultado da execução
-  error    String?
-  attempts Int       @default(0)
-  maxRetries Int     @default(3)
-
-  executedAt DateTime?
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId])
-  @@index([scheduledFor])
-  @@index([status])
-  @@index([actionType])
-  @@map("scheduled_tasks")
-}
-
-// Tabelas de inventário/produtos
-model Category {
-  id          String   @id @default(cuid())
+model categories {
+  id          String     @id
   userId      String
   name        String
-  description String?  @db.Text
+  description String?    @db.Text
   icon        String?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  products Product[]
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime
+  users       users      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  products    products[]
 
   @@unique([userId, name])
   @@index([userId])
-  @@map("categories")
 }
 
-model Product {
-  id          String   @id @default(cuid())
-  userId      String
-  categoryId  String
-  name        String
-  description String?  @db.Text
-  sku         String
-  price       Float
-  quantity    Int
-  image       String?
+model integration_credentials {
+  id                  String                @id
+  name                String                @unique
+  type                String
+  credentials         String                @db.LongText
+  isActive            Boolean               @default(true)
+  description         String?               @db.Text
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime
+  messaging_instances messaging_instances[]
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  @@index([isActive])
+  @@index([type])
+}
 
-  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
-  quoteItems QuoteItem[]
-  stockEntries StockEntry[]
+model messaging_instances {
+  id                 String               @id
+  userId             String
+  channel            String
+  channelInstanceId  String
+  channelPhoneOrId   String
+  status             String               @default("pending")
+  qrCode             String?              @db.LongText
+  metadata           String?              @db.LongText
+  credentialId       String?
+  lastConnectedAt    DateTime?
+  lastDisconnectedAt DateTime?
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime
+  users              users                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messaging_messages messaging_messages[]
+  credential         integration_credentials? @relation(fields: [credentialId], references: [id], onDelete: SetNull)
+
+  @@unique([channel, channelInstanceId])
+  @@index([channel])
+  @@index([status])
+  @@index([userId])
+  @@index([credentialId])
+}
+
+model messaging_messages {
+  id                  String              @id
+  userId              String
+  instanceId          String
+  channel             String
+  remoteJid           String
+  message             String              @db.Text
+  channelMessageId    String?             @unique
+  direction           String              @default("sent")
+  status              String              @default("pending")
+  mediaUrl            String?
+  mediaType           String?
+  error               String?
+  retries             Int                 @default(0)
+  maxRetries          Int                 @default(3)
+  sentAt              DateTime?
+  deliveredAt         DateTime?
+  readAt              DateTime?
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime
+  messaging_instances messaging_instances @relation(fields: [instanceId], references: [id], onDelete: Cascade)
+  users               users               @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([channel])
+  @@index([instanceId])
+  @@index([status])
+  @@index([userId])
+}
+
+model products {
+  id            String          @id
+  userId        String
+  categoryId    String
+  name          String
+  description   String?         @db.Text
+  sku           String
+  price         Float
+  quantity      Int
+  image         String?
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime
+  categories    categories      @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  users         users           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  quote_items   quote_items[]
+  stock_entries stock_entries[]
 
   @@unique([userId, sku])
-  @@index([userId])
   @@index([categoryId])
-  @@map("products")
-}
-
-model Quote {
-  id          String   @id @default(cuid())
-  userId      String
-  quoteNumber String?
-  status      String   @default("pending") // pending, sent, accepted, rejected
-  discount    Float    @default(0)
-  tax         Float    @default(0)
-  total       Float
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
-  items      QuoteItem[]
-
   @@index([userId])
-  @@index([status])
-  @@map("quotes")
 }
 
-model QuoteItem {
-  id        String   @id @default(cuid())
+model quote_items {
+  id        String   @id
   quoteId   String
   productId String
   quantity  Int
   unitPrice Float
   total     Float
-
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  updatedAt DateTime
+  products  products @relation(fields: [productId], references: [id], onDelete: Cascade)
+  quotes    quotes   @relation(fields: [quoteId], references: [id], onDelete: Cascade)
 
-  quote   Quote   @relation(fields: [quoteId], references: [id], onDelete: Cascade)
-  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
-
-  @@index([quoteId])
   @@index([productId])
-  @@map("quote_items")
+  @@index([quoteId])
 }
 
-model StockEntry {
-  id        String   @id @default(cuid())
+model quotes {
+  id          String        @id
+  userId      String
+  status      String        @default("pending")
+  discount    Float         @default(0)
+  tax         Float         @default(0)
+  total       Float
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime
+  quoteNumber String?
+  quote_items quote_items[]
+  users       users         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([status])
+  @@index([userId])
+}
+
+model scheduled_messages {
+  id           String    @id
+  userId       String
+  instanceName String
+  phoneNumber  String
+  message      String    @db.Text
+  scheduledFor DateTime
+  status       String    @default("pending")
+  sentAt       DateTime?
+  error        String?
+  messageId    String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime
+  users        users     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([scheduledFor])
+  @@index([status])
+  @@index([userId])
+}
+
+model scheduled_tasks {
+  id           String    @id
+  userId       String
+  actionType   String
+  payload      String    @db.LongText
+  scheduledFor DateTime
+  status       String    @default("pending")
+  result       String?   @db.LongText
+  error        String?
+  attempts     Int       @default(0)
+  maxRetries   Int       @default(3)
+  executedAt   DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime
+  users        users     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([actionType])
+  @@index([scheduledFor])
+  @@index([status])
+  @@index([userId])
+}
+
+model sessions {
+  id           String   @id
+  userId       String
+  accessToken  String   @unique
+  refreshToken String   @unique
+  expiresAt    DateTime
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime
+  users        users    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId], map: "sessions_userId_fkey")
+}
+
+model stock_entries {
+  id        String   @id
   userId    String
   productId String
   quantity  Int
-  type      String   @default("in") // in, out, adjustment
+  type      String   @default("in")
   reason    String?
   reference String?
-
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  updatedAt DateTime
+  products  products @relation(fields: [productId], references: [id], onDelete: Cascade)
+  users     users    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
-
-  @@index([userId])
   @@index([productId])
-  @@map("stock_entries")
+  @@index([userId])
 }
 
-// Tabela de credenciais de integração (Evolution API, Twilio, etc)
-model IntegrationCredential {
-  id          String   @id @default(cuid())
-  name        String   @unique // Nome descritivo: "Evolution Principal", "Twilio US"
-  type        String   // evolution, twilio, telegram, facebook
-  credentials Json     // { apiToken: "xxx", baseUrl: "http://..." }
-  isActive    Boolean  @default(true)
-  description String?  @db.Text
+model users {
+  id                    String                  @id
+  email                 String                  @unique
+  name                  String
+  password              String?
+  avatar                String?
+  phone                 String?
+  cpf                   String?                 @unique
+  birthDate             DateTime?
+  whatsapp              String?
+  instagram             String?
+  facebook              String?
+  role                  users_role              @default(USER)
+  provider              users_provider?         @default(LOCAL)
+  providerId            String?
+  status                String                  @default("ACTIVE")
+  isVerified            Boolean                 @default(false)
+  isActive              Boolean                 @default(true)
+  createdAt             DateTime                @default(now())
+  updatedAt             DateTime
+  business_profiles     business_profiles[]
+  categories            categories[]
+  messaging_instances   messaging_instances[]
+  messaging_messages    messaging_messages[]
+  products              products[]
+  quotes                quotes[]
+  scheduled_messages    scheduled_messages[]
+  scheduled_tasks       scheduled_tasks[]
+  sessions              sessions[]
+  stock_entries         stock_entries[]
+  whatsapp_instances    whatsapp_instances[]
+  whatsapp_message_logs whatsapp_message_logs[]
+}
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+model whatsapp_instances {
+  id                    String                  @id
+  userId                String
+  instanceName          String                  @unique
+  phoneNumber           String?
+  status                String                  @default("close")
+  state                 String                  @default("DISCONNECTED")
+  qrCode                String?                 @db.LongText
+  webhookUrl            String?
+  lastConnectedAt       DateTime?
+  createdAt             DateTime                @default(now())
+  updatedAt             DateTime
+  users                 users                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  whatsapp_message_logs whatsapp_message_logs[]
 
-  @@index([type])
-  @@index([isActive])
-  @@map("integration_credentials")
+  @@index([instanceName])
+  @@index([userId])
+}
+
+model whatsapp_message_logs {
+  id                 String             @id
+  userId             String
+  instanceId         String
+  remoteJid          String
+  message            String             @db.Text
+  messageId          String             @unique
+  direction          String             @default("sent")
+  status             String             @default("pending")
+  mediaUrl           String?
+  error              String?
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime
+  whatsapp_instances whatsapp_instances @relation(fields: [instanceId], references: [id], onDelete: Cascade)
+  users              users              @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([instanceId])
+  @@index([messageId])
+  @@index([userId])
+}
+
+enum business_profiles_personType {
+  PF
+  PJ
+}
+
+enum business_profiles_status {
+  UNVERIFIED
+  VERIFIED
+  CANCELLED
+}
+
+enum users_role {
+  USER
+  SELLER
+  ADMIN
+}
+
+enum users_provider {
+  LOCAL
+  GOOGLE
+  FACEBOOK
 }

@@ -9,6 +9,7 @@ export interface MessagingInstanceData {
   channelPhoneOrId: string; // Telefone para WhatsApp, ID para Telegram, etc
   status: ConnectionStatus;
   credentials?: Record<string, any>; // Credenciais criptografadas ou tokens
+  credentialId?: string; // ID da credencial de integração utilizada
   qrCode?: string; // Para canais que precisam de QR code
   metadata?: Record<string, any>; // Dados específicos do canal
   createdAt: Date;
