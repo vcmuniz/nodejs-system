@@ -54,10 +54,19 @@ model categories {
   @@index([userId])
 }
 
+enum ChannelType {
+  whatsapp_evolution
+  whatsapp_oficial
+  sms
+  email
+  telegram
+  facebook
+}
+
 model integration_credentials {
   id                  String                @id
   name                String                @unique
-  type                String
+  type                ChannelType
   credentials         String                @db.LongText
   isActive            Boolean               @default(true)
   description         String?               @db.Text
@@ -72,7 +81,7 @@ model integration_credentials {
 model messaging_instances {
   id                 String               @id
   userId             String
-  channel            String
+  channel            ChannelType
   channelInstanceId  String
   channelPhoneOrId   String
   status             String               @default("pending")
