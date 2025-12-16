@@ -20,7 +20,8 @@ export class PrismaUserRepository implements IUserRepository {
             where: { email: user.email },
             update: {
                 name: user.name,
-                password: user.password
+                password: user.password,
+                updatedAt: new Date()
             },
             create: {
                 id: user.id,
@@ -28,7 +29,9 @@ export class PrismaUserRepository implements IUserRepository {
                 password: user.password,
                 name: user.name,
                 role: (user.role as any) || 'USER',
-                status: 'ACTIVE'
+                status: 'ACTIVE',
+                createdAt: new Date(),
+                updatedAt: new Date()
             }
         });
 
