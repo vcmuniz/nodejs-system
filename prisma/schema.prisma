@@ -381,3 +381,20 @@ model StockEntry {
   @@index([productId])
   @@map("stock_entries")
 }
+
+// Tabela de credenciais de integração (Evolution API, Twilio, etc)
+model IntegrationCredential {
+  id          String   @id @default(cuid())
+  name        String   @unique // Nome descritivo: "Evolution Principal", "Twilio US"
+  type        String   // evolution, twilio, telegram, facebook
+  credentials Json     // { apiToken: "xxx", baseUrl: "http://..." }
+  isActive    Boolean  @default(true)
+  description String?  @db.Text
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([type])
+  @@index([isActive])
+  @@map("integration_credentials")
+}

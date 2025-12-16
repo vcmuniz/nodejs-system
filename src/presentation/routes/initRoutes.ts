@@ -11,6 +11,7 @@ import { makeProductRoutes } from "./product.routes";
 import { makeCategoryRoutes } from "./category.routes";
 import { makeStockRoutes } from "./stock.routes";
 import { makeQuoteRoutes } from "./quote.routes";
+import integrationCredentialsRoutes from "./integration-credentials.routes";
 
 export default (app: Express): void => {
     app.use("/", makeIndexRouter());
@@ -23,4 +24,6 @@ export default (app: Express): void => {
     app.use("/api/inventory/categories", makeCategoryRoutes());
     app.use("/api/inventory/stock", makeStockRoutes());
     app.use("/api/inventory/quotes", makeQuoteRoutes());
+    
+    app.use("/api/integration-credentials", integrationCredentialsRoutes);
 }

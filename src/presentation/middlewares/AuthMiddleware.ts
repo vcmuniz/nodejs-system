@@ -31,11 +31,30 @@ export class AuthMiddleware {
         req.user = {
           id: decoded.userId,
           email: decoded.email,
+          role: user.role,
         };
 
         next();
       } catch (err) {
         return res.status(500).json({ error: "Authentication failed" });
+      }
+    };
+  }
+
+  requireAdmin() {
+    return async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+      try {
+        if (!req.user) {
+          return res.status(401).json({ error: "User not authenticated" });
+        }
+
+        if (req.user.role !== 'ADMIN') {
+          return res.status(403).json({ error: "Access denied. Admin role required." });
+        }
+
+        next();
+      } catch (err) {
+        return res.status(500).json({ error: "Authorization failed" });
       }
     };
   }
