@@ -12,7 +12,7 @@ export class PrismaMessagingRepository implements IMessagingRepository {
       data: {
         id: data.id,
         userId: data.userId,
-        channel: data.channel,
+        channel: data.channel as any,
         channelInstanceId: data.channelInstanceId,
         channelPhoneOrId: data.channelPhoneOrId,
         status: data.status,
@@ -73,7 +73,7 @@ export class PrismaMessagingRepository implements IMessagingRepository {
 
   async getInstanceByChannelId(channelInstanceId: string, channel: MessagingChannel): Promise<MessagingInstanceData | null> {
     const instance = await this.prisma.messaging_instances.findFirst({
-      where: { channelInstanceId, channel },
+      where: { channelInstanceId, channel: channel as any },
     });
 
     return instance ? this.mapToMessagingInstanceData(instance) : null;

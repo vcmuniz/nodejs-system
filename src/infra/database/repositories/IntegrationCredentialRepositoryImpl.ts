@@ -10,7 +10,7 @@ export class IntegrationCredentialRepositoryImpl implements IIntegrationCredenti
       data: {
         id: Math.random().toString(36).substring(7),
         name: data.name,
-        type: data.type,
+        type: data.type as any,
         credentials: JSON.stringify(data.credentials),
         isActive: data.isActive ?? true,
         description: data.description,
@@ -41,7 +41,7 @@ export class IntegrationCredentialRepositoryImpl implements IIntegrationCredenti
   async findByType(type: string, activeOnly: boolean = false): Promise<IntegrationCredential[]> {
     const results = await this.prisma.integration_credentials.findMany({
       where: {
-        type,
+        type: type as any,
         ...(activeOnly && { isActive: true }),
       },
       orderBy: { createdAt: 'desc' },
