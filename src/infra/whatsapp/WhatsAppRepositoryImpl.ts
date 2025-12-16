@@ -13,7 +13,7 @@ export class WhatsAppRepositoryImpl implements IWhatsAppRepository {
 
   async saveInstance(data: WhatsAppInstanceData): Promise<WhatsAppInstanceData> {
     try {
-      const instance = await this.prisma.whatsAppInstance.upsert({
+      const instance = await this.prisma.whatsapp_instances.upsert({
         where: { instanceName: data.instanceName },
         update: {
           status: data.status,
@@ -54,7 +54,7 @@ export class WhatsAppRepositoryImpl implements IWhatsAppRepository {
 
   async getInstanceByUserId(userId: string): Promise<WhatsAppInstanceData | null> {
     try {
-      const instance = await this.prisma.whatsAppInstance.findFirst({
+      const instance = await this.prisma.whatsapp_instances.findFirst({
         where: { userId },
       });
 
@@ -79,7 +79,7 @@ export class WhatsAppRepositoryImpl implements IWhatsAppRepository {
 
   async listInstancesByUserId(userId: string): Promise<WhatsAppInstanceData[]> {
     try {
-      const instances = await this.prisma.whatsAppInstance.findMany({
+      const instances = await this.prisma.whatsapp_instances.findMany({
         where: { userId },
         orderBy: { createdAt: 'desc' },
       });
@@ -103,7 +103,7 @@ export class WhatsAppRepositoryImpl implements IWhatsAppRepository {
 
   async getInstanceByName(instanceName: string): Promise<WhatsAppInstanceData | null> {
     try {
-      const instance = await this.prisma.whatsAppInstance.findUnique({
+      const instance = await this.prisma.whatsapp_instances.findUnique({
         where: { instanceName },
       });
 
@@ -131,7 +131,7 @@ export class WhatsAppRepositoryImpl implements IWhatsAppRepository {
     status: WhatsAppInstanceData['status'],
   ): Promise<void> {
     try {
-      await this.prisma.whatsAppInstance.update({
+      await this.prisma.whatsapp_instances.update({
         where: { instanceName },
         data: {
           status: status === 'connected' ? 'open' : 'close',
@@ -148,7 +148,7 @@ export class WhatsAppRepositoryImpl implements IWhatsAppRepository {
 
   async updateInstanceQrCode(instanceName: string, qrCode: string): Promise<void> {
     try {
-      await this.prisma.whatsAppInstance.updateMany({
+      await this.prisma.whatsapp_instances.updateMany({
         where: { instanceName },
         data: {
           qrCode,
@@ -163,7 +163,7 @@ export class WhatsAppRepositoryImpl implements IWhatsAppRepository {
 
   async deleteInstance(instanceName: string): Promise<void> {
     try {
-      await this.prisma.whatsAppInstance.delete({
+      await this.prisma.whatsapp_instances.delete({
         where: { instanceName },
       });
     } catch (error) {
@@ -176,7 +176,7 @@ export class WhatsAppRepositoryImpl implements IWhatsAppRepository {
 
   async logMessage(data: WhatsAppMessageLog): Promise<WhatsAppMessageLog> {
     try {
-      const message = await this.prisma.whatsAppMessageLog.create({
+      const message = await this.prisma.whatsapp_message_logs.create({
         data: {
           id: data.id,
           userId: data.userId,
@@ -218,7 +218,7 @@ export class WhatsAppRepositoryImpl implements IWhatsAppRepository {
     status: WhatsAppMessageLog['status'],
   ): Promise<void> {
     try {
-      await this.prisma.whatsAppMessageLog.update({
+      await this.prisma.whatsapp_message_logs.update({
         where: { messageId },
         data: {
           status,
@@ -233,7 +233,7 @@ export class WhatsAppRepositoryImpl implements IWhatsAppRepository {
 
   async getMessageLog(userId: string, limit: number = 50): Promise<WhatsAppMessageLog[]> {
     try {
-      const messages = await this.prisma.whatsAppMessageLog.findMany({
+      const messages = await this.prisma.whatsapp_message_logs.findMany({
         where: { userId },
         orderBy: { createdAt: 'desc' },
         take: limit,
