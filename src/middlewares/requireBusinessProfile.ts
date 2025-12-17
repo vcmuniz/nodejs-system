@@ -9,7 +9,9 @@ export const requireBusinessProfile = async (
   res: Response,
   next: NextFunction
 ) => {
+  console.log('[requireBusinessProfile] req.user:', req.user);
   const businessProfileId = req.user?.businessProfileId;
+  console.log('[requireBusinessProfile] businessProfileId:', businessProfileId);
 
   if (!businessProfileId) {
     return res.status(400).json({

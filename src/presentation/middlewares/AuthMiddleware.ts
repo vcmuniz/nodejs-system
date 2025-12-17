@@ -42,6 +42,7 @@ export class AuthMiddleware {
           id: decoded.userId,
           email: decoded.email,
           role: user.role,
+          businessProfileId: decoded.businessProfileId,
         };
 
         console.log('[AuthMiddleware] 8. req.user definido, chamando next()');
