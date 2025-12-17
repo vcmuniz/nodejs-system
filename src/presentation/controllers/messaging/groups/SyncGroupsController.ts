@@ -3,6 +3,8 @@ import { AuthenticatedRequest } from '../../../interfaces/AuthenticatedRequest';
 import { SyncGroupsFromProvider } from '../../../../usercase/messaging/groups/SyncGroupsFromProvider';
 import { makeMessagingGroupRepository } from '../../../../infra/database/factories/makeMessagingGroupRepository';
 import { makeMessagingRepository } from '../../../../infra/database/factories/makeMessagingRepository';
+import { GetIntegrationCredentialById } from '../../../../usercase/integration-credentials/GetIntegrationCredentialById';
+import { makeIntegrationCredentialRepository } from '../../../../infra/database/factories/makeIntegrationCredentialRepository';
 import axios from 'axios';
 import { ENV } from '../../../../config/enviroments';
 import { v4 as uuidv4 } from 'uuid';
@@ -98,19 +100,23 @@ export class SyncGroupsController {
       let apiKey = '';
 
       if (instance.credentialId) {
-        // Busca as credenciais do banco
-        const prisma = (await import('../../../infra/database/prisma')).default;
-        const credential = await prisma.integration_credentials.findUnique({
-          where: { id: instance.credentialId }
-        });
+        try {
+          // Usa o use case para buscar credenciais
+          const credentialRepository = makeIntegrationCredentialRepository();
+          const getCredentialUseCase = new GetIntegrationCredentialById(credentialRepository);
+          const credential = await getCredentialUseCase.execute(instance.credentialId);
 
-        if (credential && credential.credentials) {
-          const creds = typeof credential.credentials === 'string' 
-            ? JSON.parse(credential.credentials) 
-            : credential.credentials;
-          
-          evolutionUrl = creds.baseUrl || creds.apiUrl || 'http://localhost:8080';
-          apiKey = creds.apiKey || creds.apikey || '';
+          if (credential && credential.credentials) {
+            const creds = typeof credential.credentials === 'string' 
+              ? JSON.parse(credential.credentials) 
+              : credential.credentials;
+            
+            evolutionUrl = creds.baseUrl || creds.apiUrl || 'http://localhost:8080';
+            apiKey = creds.apiKey || creds.apikey || '';
+          }
+        } catch (error) {
+          console.log('[SyncGroups] Erro ao buscar credenciais:', error);
+          // Continua para tentar usar ENV como fallback
         }
       }
 
