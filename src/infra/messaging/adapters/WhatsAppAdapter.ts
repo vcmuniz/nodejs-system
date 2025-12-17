@@ -41,6 +41,22 @@ export class WhatsAppAdapter implements IMessagingAdapter {
       
       console.log(`[WhatsAppAdapter] QR Code recebido:`, connectResponse.base64 ? 'SIM' : 'NÃO');
       
+      // Configurar webhook automaticamente
+      try {
+        const webhookUrl = process.env.WEBHOOK_URL || process.env.APP_URL;
+        if (webhookUrl) {
+          const fullWebhookUrl = `${webhookUrl}/api/messaging/webhook/${params.channelInstanceId}`;
+          console.log(`[WhatsAppAdapter] Configurando webhook: ${fullWebhookUrl}`);
+          await this.evolutionAPI.setWebhook(params.channelInstanceId, fullWebhookUrl);
+          console.log(`[WhatsAppAdapter] Webhook configurado com sucesso`);
+        } else {
+          console.warn(`[WhatsAppAdapter] WEBHOOK_URL ou APP_URL não configurado no .env`);
+        }
+      } catch (webhookError: any) {
+        console.warn(`[WhatsAppAdapter] Erro ao configurar webhook (não é crítico):`, webhookError.message);
+        // Não falha se webhook der erro, pois não é crítico
+      }
+      
       return {
         status: ConnectionStatus.CONNECTING,
         qrCode: connectResponse.base64, // QR Code vem direto na raiz da resposta

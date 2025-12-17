@@ -274,5 +274,56 @@ export const makeMessagingRoutes = () => {
     (req, res) => makeSendMessageController().handle(req, res)
   );
 
+  /**
+   * @swagger
+   * /api/messaging/webhook/{instanceId}:
+   *   post:
+   *     tags:
+   *       - Messaging (Multi-Channel)
+   *     summary: Webhook endpoint for messaging events
+   *     description: Receives events from messaging providers (Evolution API, etc)
+   *     parameters:
+   *       - in: path
+   *         name: instanceId
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: Instance identifier
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             description: Webhook payload from messaging provider
+   *     responses:
+   *       200:
+   *         description: Webhook received successfully
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 success:
+   *                   type: boolean
+   *                   example: true
+   *                 message:
+   *                   type: string
+   *                   example: 'Webhook processado'
+   */
+  router.post(
+    '/webhook/:instanceId',
+    (req, res) => {
+      console.log(`[Webhook] Recebido para instância: ${req.params.instanceId}`);
+      console.log(`[Webhook] Event:`, req.body.event);
+      console.log(`[Webhook] Data keys:`, Object.keys(req.body.data || {}));
+      
+      // TODO: Processar webhook e atualizar status/mensagens no banco
+      // Por enquanto apenas loga para debug
+      
+      res.json({ success: true, message: 'Webhook recebido' });
+    }
+  );
+
   return router;
 };
