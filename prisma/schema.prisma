@@ -291,6 +291,9 @@ model users {
   stock_entries         stock_entries[]
   whatsapp_instances    whatsapp_instances[]
   whatsapp_message_logs whatsapp_message_logs[]
+  contacts              contacts[]
+  lead_captures         lead_captures[]
+  contact_activities    contact_activities[]
 }
 
 model whatsapp_instances {
@@ -354,4 +357,110 @@ enum users_provider {
   LOCAL
   GOOGLE
   FACEBOOK
+}
+
+model contacts {
+  id              String               @id @default(uuid())
+  userId          String
+  
+  name            String
+  email           String?
+  phone           String?
+  cpf             String?              @unique
+  
+  company         String?
+  position        String?
+  website         String?
+  
+  street          String?
+  number          String?
+  complement      String?
+  neighborhood    String?
+  city            String?
+  state           String?
+  zipCode         String?
+  country         String?              @default("Brasil")
+  
+  birthDate       DateTime?
+  notes           String?              @db.LongText
+  tags            String?
+  customFields    String?              @db.LongText
+  
+  source          String?
+  sourceUrl       String?
+  leadCaptureId   String?
+  
+  status          String               @default("active")
+  isLead          Boolean              @default(false)
+  leadScore       Int                  @default(0)
+  
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
+  convertedAt     DateTime?
+  
+  user            users                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  leadCapture     lead_captures?       @relation(fields: [leadCaptureId], references: [id])
+  activities      contact_activities[]
+  
+  @@index([userId])
+  @@index([email])
+  @@index([phone])
+  @@index([isLead])
+  @@index([status])
+  @@index([leadCaptureId])
+  @@index([createdAt])
+}
+
+model lead_captures {
+  id               String     @id @default(uuid())
+  userId           String
+  
+  name             String
+  title            String
+  description      String?    @db.Text
+  
+  fields           String     @db.LongText
+  requiredFields   String     @db.LongText
+  
+  submitButtonText String     @default("Enviar")
+  successMessage   String     @db.Text
+  redirectUrl      String?
+  
+  webhookUrl       String?
+  notifyEmail      String?
+  
+  isActive         Boolean    @default(true)
+  slug             String     @unique
+  totalCaptures    Int        @default(0)
+  
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
+  
+  user             users      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  contacts         contacts[]
+  
+  @@index([userId])
+  @@index([slug])
+  @@index([isActive])
+}
+
+model contact_activities {
+  id          String    @id @default(uuid())
+  contactId   String
+  userId      String?
+  
+  type        String
+  title       String
+  description String?   @db.Text
+  
+  metadata    String?   @db.LongText
+  
+  createdAt   DateTime  @default(now())
+  
+  contact     contacts  @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  user        users?    @relation(fields: [userId], references: [id])
+  
+  @@index([contactId])
+  @@index([type])
+  @@index([createdAt])
 }

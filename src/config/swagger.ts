@@ -300,6 +300,165 @@ const options = {
           },
           required: ['id', 'userId', 'instanceId', 'channel', 'remoteJid', 'message', 'direction', 'status'],
         },
+        Contact: {
+          type: 'object',
+          properties: {
+            id: {
+              type: 'string',
+              example: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
+            },
+            userId: {
+              type: 'string',
+              example: 'user123',
+            },
+            name: {
+              type: 'string',
+              example: 'João Silva',
+            },
+            email: {
+              type: 'string',
+              format: 'email',
+              example: 'joao@example.com',
+            },
+            phone: {
+              type: 'string',
+              example: '5511999999999',
+            },
+            cpf: {
+              type: 'string',
+              example: '12345678900',
+            },
+            company: {
+              type: 'string',
+              example: 'Empresa XYZ',
+            },
+            position: {
+              type: 'string',
+              example: 'Gerente de Vendas',
+            },
+            website: {
+              type: 'string',
+              example: 'https://example.com',
+            },
+            tags: {
+              type: 'array',
+              items: {
+                type: 'string',
+              },
+              example: ['cliente', 'vip'],
+            },
+            customFields: {
+              type: 'object',
+              example: { 'interesse': 'Produto Premium' },
+            },
+            source: {
+              type: 'string',
+              enum: ['manual', 'lead_capture', 'import', 'whatsapp'],
+              example: 'manual',
+            },
+            isLead: {
+              type: 'boolean',
+              example: false,
+            },
+            leadScore: {
+              type: 'integer',
+              example: 50,
+            },
+            status: {
+              type: 'string',
+              enum: ['active', 'inactive', 'blocked'],
+              example: 'active',
+            },
+            createdAt: {
+              type: 'string',
+              format: 'date-time',
+              example: '2024-01-15T10:30:00Z',
+            },
+            convertedAt: {
+              type: 'string',
+              format: 'date-time',
+              example: '2024-01-15T10:30:00Z',
+            },
+          },
+          required: ['id', 'userId', 'name'],
+        },
+        LeadCapture: {
+          type: 'object',
+          properties: {
+            id: {
+              type: 'string',
+              example: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
+            },
+            userId: {
+              type: 'string',
+              example: 'user123',
+            },
+            name: {
+              type: 'string',
+              example: 'Landing Page E-book',
+            },
+            title: {
+              type: 'string',
+              example: 'Baixe nosso E-book Grátis',
+            },
+            description: {
+              type: 'string',
+              example: 'Aprenda tudo sobre marketing digital',
+            },
+            slug: {
+              type: 'string',
+              example: 'ebook-marketing',
+            },
+            fields: {
+              type: 'array',
+              items: {
+                type: 'string',
+              },
+              example: ['name', 'email', 'phone'],
+            },
+            requiredFields: {
+              type: 'array',
+              items: {
+                type: 'string',
+              },
+              example: ['name', 'email'],
+            },
+            submitButtonText: {
+              type: 'string',
+              example: 'Baixar E-book',
+            },
+            successMessage: {
+              type: 'string',
+              example: 'Obrigado! Enviamos o e-book para seu email.',
+            },
+            redirectUrl: {
+              type: 'string',
+              example: 'https://meusite.com/obrigado',
+            },
+            webhookUrl: {
+              type: 'string',
+              example: 'https://meusite.com/webhook',
+            },
+            notifyEmail: {
+              type: 'string',
+              example: 'vendas@meusite.com',
+            },
+            isActive: {
+              type: 'boolean',
+              example: true,
+            },
+            totalCaptures: {
+              type: 'integer',
+              example: 150,
+            },
+            createdAt: {
+              type: 'string',
+              format: 'date-time',
+              example: '2024-01-15T10:30:00Z',
+            },
+          },
+          required: ['id', 'userId', 'name', 'title', 'slug', 'fields', 'requiredFields', 'successMessage'],
+        },
       },
     },
   },

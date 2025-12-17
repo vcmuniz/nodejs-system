@@ -1,4 +1,5 @@
 import { Express, Router } from "express"
+import { PrismaClient } from "@prisma/client";
 import { makeAuthRoutes } from "./auth.routes";
 import { makeOrderRoutes } from "./order.routes";
 import { makeWhatsAppRoutes } from "./whatsapp.routes";
@@ -12,6 +13,10 @@ import { makeCategoryRoutes } from "./category.routes";
 import { makeStockRoutes } from "./stock.routes";
 import { makeQuoteRoutes } from "./quote.routes";
 import integrationCredentialsRoutes from "./integration-credentials.routes";
+import { makeContactRoutes } from "./contacts.routes";
+import { makeLeadCaptureRoutes, makePublicLeadRoutes } from "./lead-captures.routes";
+
+const prisma = new PrismaClient();
 
 export default (app: Express): void => {
     app.use("/", makeIndexRouter());
@@ -26,4 +31,8 @@ export default (app: Express): void => {
     app.use("/api/inventory/quotes", makeQuoteRoutes());
     
     app.use("/api/integration-credentials", integrationCredentialsRoutes);
+    
+    app.use("/api/contacts", makeContactRoutes(prisma));
+    app.use("/api/lead-captures", makeLeadCaptureRoutes(prisma));
+    app.use("/public/lead", makePublicLeadRoutes(prisma));
 }
