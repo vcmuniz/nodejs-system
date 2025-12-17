@@ -1,135 +1,147 @@
-# 🔴 PRÓXIMO PASSO: Gerar Migration do Prisma
+# 🚀 PRÓXIMO PASSO: Sistema de Contatos e Captura de Leads
 
-## ⚠️ IMPORTANTE: Leia isso ANTES de continuar!
+## 📋 Planejamento Completo
 
-A arquitetura de messageria foi implementada **sem erros**, mas o Prisma ainda não gerou os tipos das novas tabelas porque a migration não foi rodada.
+**Status:** ✅ Aprovado para implementação
 
----
-
-## ✅ O que você precisa fazer (3 comandos)
-
-### **1. Gerar e aplicar migration**
-```bash
-cd /home/victo/stackline/stackline-saas-nodejs
-npx prisma migrate dev --name "add-messaging-tables"
-```
-
-**O que vai acontecer:**
-- ✅ Perguntará: "Created a new migration file but database migration failed"
-- ✅ Criará o arquivo de migration em `prisma/migrations/`
-- ✅ Criará as tabelas no banco:
-  - `messaging_instances`
-  - `messaging_messages`
-- ✅ Gerará tipos TypeScript automaticamente
-
-### **2. Verificar que funcionou**
-```bash
-npx tsc --noEmit
-```
-
-**Resultado esperado:**
-- ✅ Nenhum erro "Property 'messagingInstance' does not exist"
-- ✅ Podem haver outros erros da codebase, mas não relacionados a messaging
-
-### **3. Rodar a app**
-```bash
-npm run dev
-```
-
-**Você deve ver:**
-```
-✅ Server running on port 3000
-✅ Database connected
-```
+**Documento detalhado:** `docs/CONTACTS_AND_LEADS_PLANNING.md`
 
 ---
 
-## 📋 Checklist
+## 🎯 O Que Vamos Criar
 
-- [ ] Rodei `npx prisma migrate dev --name "add-messaging-tables"`
-- [ ] Migration foi aplicada com sucesso
-- [ ] Rodei `npx tsc --noEmit` e não há erros de messaging
-- [ ] App roda com `npm run dev` sem erros
-- [ ] Consegui acessar `http://localhost:3000/api/messaging/instances` com Postman
+### 1. **CRUD de Contatos** (Privado)
+- Criar, listar, editar, deletar contatos
+- Campos completos: nome, email, telefone, CPF, empresa, cargo, endereço, etc
+- Tags e campos customizados
+- Timeline de atividades
+- Conversão de leads em contatos
+
+### 2. **Captura de Leads** (Público)
+- API pública (sem autenticação) para sites de captura
+- Páginas de captura configuráveis
+- Formulários personalizáveis
+- Estatísticas e métricas
+- Webhooks para notificações
+
+### 3. **Gestão de Leads**
+- Rastreamento de origem
+- Lead scoring
+- Conversão para contato
+- Filtros e buscas avançadas
+- Dashboard com estatísticas
 
 ---
 
-## ❌ Se der erro...
+## 📊 Estrutura do Banco
 
-### "Error: P1001 Can't reach database server"
-**Solução:** Verifique se o BD está rodando (MySQL no seu caso)
+### Tabelas a criar:
+1. **`contacts`** - Armazena contatos e leads
+2. **`lead_captures`** - Páginas de captura configuradas
+3. **`contact_activities`** - Timeline de atividades dos contatos
 
-### "Error: P3018 A migration failed when applied to the database"
-**Solução:** Verifique se as tabelas já existem:
-```bash
-# No MySQL, veja se existem
-SHOW TABLES LIKE '%messaging%';
+---
 
-# Se existirem, delete:
-DROP TABLE IF EXISTS messaging_message;
-DROP TABLE IF EXISTS messaging_instance;
+## 🌐 Endpoints Principais
 
-# E rode migration novamente
-npx prisma migrate dev --name "add-messaging-tables"
+### Privados (com auth):
+```
+POST   /api/contacts
+GET    /api/contacts
+PUT    /api/contacts/:id
+DELETE /api/contacts/:id
+POST   /api/contacts/:id/convert
+
+POST   /api/lead-captures
+GET    /api/lead-captures
+GET    /api/lead-captures/:id/stats
 ```
 
-### "Property 'messagingInstance' does not exist"
-**Solução:** A migration foi rodada mas o Prisma não gerou tipos. Rode:
-```bash
-npx prisma generate
+### Públicos (sem auth):
+```
+GET    /public/lead/:slug
+POST   /public/lead/:slug
 ```
 
 ---
 
-## 🎯 Depois da Migration
+## 🔧 Ordem de Implementação
 
-Pronto! Agora você pode:
+1. ✅ Planejamento (CONCLUÍDO)
+2. ⏭️ Migrations (schema.prisma)
+3. ⏭️ Domain entities
+4. ⏭️ Repositories
+5. ⏭️ Use Cases
+6. ⏭️ Controllers
+7. ⏭️ Routes
+8. ⏭️ Swagger
 
-1. **Integrar rotas no app.ts:**
-```typescript
-import { makeMessagingRoutes } from './presentation/routes/messaging.routes';
+---
 
-app.use('/api/messaging', makeMessagingRoutes());
-```
+## 📝 Exemplo de Uso
 
-2. **Testar com Postman:**
-```bash
-POST http://localhost:3000/api/messaging/instance
+### Criar página de captura:
+```json
+POST /api/lead-captures
 {
-  "channel": "whatsapp",
-  "channelInstanceId": "test",
-  "channelPhoneOrId": "5585999999999"
+  "name": "Landing Page Produto X",
+  "slug": "ebook-gratis",
+  "fields": ["name", "email", "phone"],
+  "requiredFields": ["name", "email"]
 }
 ```
 
-3. **Enviar mensagem:**
-```bash
-POST http://localhost:3000/api/messaging/message/send
+### Capturar lead (público):
+```json
+POST /public/lead/ebook-gratis
 {
-  "channel": "whatsapp",
-  "channelInstanceId": "test",
-  "remoteJid": "5585988888888",
-  "message": "Olá!"
+  "name": "Maria Santos",
+  "email": "maria@example.com",
+  "phone": "5521988888888"
 }
 ```
 
----
-
-## 📚 Referência
-
-- **Documentação**: `MESSAGERIA_IMPLEMENTACAO_COMPLETA.md`
-- **Quick Start**: `MESSAGERIA_QUICK_START.md`
-- **Exemplos**: `MESSAGERIA_EXEMPLOS.md`
-- **Arquitetura**: `MESSAGERIA_ARCHITECTURE.md`
+### Resultado:
+- Lead salvo automaticamente em `contacts`
+- Email de notificação enviado (se configurado)
+- Webhook disparado (se configurado)
+- Estatísticas atualizadas
 
 ---
 
-## 🚀 Sucesso!
+## 💡 Funcionalidades Extras
 
-Após rodar a migration, você terá:
-- ✅ Banco de dados com novas tabelas
-- ✅ TypeScript sem erros
-- ✅ App pronto para usar messaging API
-- ✅ Estrutura pronta para adicionar SMS, Email, Telegram, etc
+- ✅ Tags nos contatos
+- ✅ Campos customizados (JSON)
+- ✅ Timeline de atividades
+- ✅ Lead scoring
+- ✅ Webhooks de notificação
+- ✅ Estatísticas em tempo real
+- ✅ Filtros avançados
+- ✅ Conversão lead → contato
+- ✅ Rastreamento de origem (UTM)
 
-Proxímo: Integrar rotas no app.ts e testar! 🎉
+---
+
+## 📚 Documentação
+
+**Planejamento completo:** Ver `docs/CONTACTS_AND_LEADS_PLANNING.md`
+
+---
+
+## ✅ Pronto para Começar!
+
+**Comando para iniciar:**
+```bash
+# Pode dar clear no chat e dizer:
+# "Vamos implementar o sistema de contatos e leads conforme o PROXIMO_PASSO.md"
+```
+
+**O que já está pronto:**
+- ✅ Planejamento completo
+- ✅ Estrutura de banco definida
+- ✅ Endpoints mapeados
+- ✅ Ordem de implementação definida
+
+**Próxima sessão:**
+Começar pelas migrations! 🚀
