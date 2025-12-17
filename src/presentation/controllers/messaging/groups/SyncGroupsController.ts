@@ -150,7 +150,7 @@ export class SyncGroupsController {
       let groups: any[] = [];
       
       try {
-        const url = `${evolutionUrl}/group/fetchAllGroups/${instance.channelInstanceId}`;
+        const url = `${evolutionUrl}/group/fetchAllGroups/${instance.channelInstanceId}?getParticipants=true`;
         console.log('[SyncGroups] Chamando URL:', url);
         console.log('[SyncGroups] Headers:', { apikey: apiKey ? '***' : 'vazio' });
         
