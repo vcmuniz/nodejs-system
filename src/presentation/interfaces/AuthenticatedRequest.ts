@@ -9,4 +9,8 @@ export interface AuthenticatedRequest extends Request {
     role?: string;
     businessProfileId?: string;
   };
+  businessProfile?: {
+    id: string;
+    [key: string]: any;
+  };
 }

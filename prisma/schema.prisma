@@ -41,6 +41,7 @@ model business_profiles {
   contactsRelation        contacts[]
   leadCapturesRelation    lead_captures[]
   messagingInstances      messaging_instances[]
+  messagingGroups         messaging_groups[]
   productsRelation        products[]
   quotesRelation          quotes[]
   stockEntriesRelation    stock_entries[]
@@ -108,6 +109,7 @@ model messaging_instances {
   users              users                    @relation(fields: [userId], references: [id], onDelete: Cascade)
   businessProfile    business_profiles?       @relation(fields: [businessProfileId], references: [id], onDelete: Cascade)
   messaging_messages messaging_messages[]
+  messaging_groups   messaging_groups[]
   credential         integration_credentials? @relation(fields: [credentialId], references: [id], onDelete: SetNull)
 
   @@unique([channel, channelInstanceId])
@@ -145,6 +147,55 @@ model messaging_messages {
   @@index([instanceId])
   @@index([status])
   @@index([userId])
+}
+
+enum messaging_groups_type {
+  CUSTOM
+  SYNCED_WHATSAPP
+  SYNCED_TELEGRAM
+  SYNCED_EMAIL
+}
+
+model messaging_groups {
+  id                String                 @id
+  userId            String
+  businessProfileId String?
+  instanceId        String
+  name              String
+  description       String?                @db.Text
+  type              messaging_groups_type  @default(CUSTOM)
+  externalGroupId   String?
+  metadata          String?                @db.LongText
+  isSynced          Boolean                @default(false)
+  lastSyncAt        DateTime?
+  createdAt         DateTime               @default(now())
+  updatedAt         DateTime
+  users             users                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  businessProfile   business_profiles?     @relation(fields: [businessProfileId], references: [id], onDelete: Cascade)
+  messagingInstance messaging_instances    @relation(fields: [instanceId], references: [id], onDelete: Cascade)
+  members           messaging_group_members[]
+
+  @@unique([instanceId, externalGroupId])
+  @@index([userId])
+  @@index([businessProfileId])
+  @@index([instanceId])
+  @@index([isSynced])
+}
+
+model messaging_group_members {
+  id             String           @id
+  groupId        String
+  identifier     String
+  identifierType String
+  name           String?
+  metadata       String?          @db.Text
+  isActive       Boolean          @default(true)
+  addedAt        DateTime         @default(now())
+  group          messaging_groups @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@unique([groupId, identifier])
+  @@index([groupId])
+  @@index([identifier])
 }
 
 model products {
@@ -307,6 +358,7 @@ model users {
   categories            categories[]
   messaging_instances   messaging_instances[]
   messaging_messages    messaging_messages[]
+  messaging_groups      messaging_groups[]
   products              products[]
   quotes                quotes[]
   scheduled_messages    scheduled_messages[]

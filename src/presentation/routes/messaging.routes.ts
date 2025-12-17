@@ -8,6 +8,14 @@ import { makeAuthMiddleware } from '../factories/middlewares/makeAuthMiddleware'
 import { requireBusinessProfile } from '../../middlewares/requireBusinessProfile';
 import { ProcessMessagingWebhook } from '../../usercase/messaging/ProcessMessagingWebhook';
 import { makeMessagingRepository } from '../../infra/database/factories/makeMessagingRepository';
+import { makeCreateMessagingGroupController } from '../controllers/messaging/groups/CreateMessagingGroupController';
+import { makeListMessagingGroupsController } from '../controllers/messaging/groups/ListMessagingGroupsController';
+import { makeUpdateMessagingGroupController } from '../controllers/messaging/groups/UpdateMessagingGroupController';
+import { makeDeleteMessagingGroupController } from '../controllers/messaging/groups/DeleteMessagingGroupController';
+import { makeAddGroupMemberController } from '../controllers/messaging/groups/AddGroupMemberController';
+import { makeRemoveGroupMemberController } from '../controllers/messaging/groups/RemoveGroupMemberController';
+import { makeListGroupMembersController } from '../controllers/messaging/groups/ListGroupMembersController';
+import { makeSendMessageToGroupController } from '../controllers/messaging/groups/SendMessageToGroupController';
 
 /**
  * @swagger
@@ -145,6 +153,41 @@ export const makeMessagingRoutes = () => {
         res.status(500).json({ success: false, error: error.message });
       }
     }
+  );
+
+  // GRUPOS DE ENVIO
+  router.post('/groups', authMiddleware.authenticate(), requireBusinessProfile, (req, res) =>
+    makeCreateMessagingGroupController().handle(req, res)
+  );
+
+  router.get('/groups', authMiddleware.authenticate(), requireBusinessProfile, (req, res) =>
+    makeListMessagingGroupsController().handle(req, res)
+  );
+
+  router.put('/groups/:groupId', authMiddleware.authenticate(), requireBusinessProfile, (req, res) =>
+    makeUpdateMessagingGroupController().handle(req, res)
+  );
+
+  router.delete('/groups/:groupId', authMiddleware.authenticate(), requireBusinessProfile, (req, res) =>
+    makeDeleteMessagingGroupController().handle(req, res)
+  );
+
+  // MEMBROS DO GRUPO
+  router.post('/groups/:groupId/members', authMiddleware.authenticate(), requireBusinessProfile, (req, res) =>
+    makeAddGroupMemberController().handle(req, res)
+  );
+
+  router.delete('/groups/:groupId/members/:identifier', authMiddleware.authenticate(), requireBusinessProfile, (req, res) =>
+    makeRemoveGroupMemberController().handle(req, res)
+  );
+
+  router.get('/groups/:groupId/members', authMiddleware.authenticate(), requireBusinessProfile, (req, res) =>
+    makeListGroupMembersController().handle(req, res)
+  );
+
+  // ENVIO PARA GRUPO
+  router.post('/groups/:groupId/send', authMiddleware.authenticate(), requireBusinessProfile, (req, res) =>
+    makeSendMessageToGroupController().handle(req, res)
   );
 
   return router;
