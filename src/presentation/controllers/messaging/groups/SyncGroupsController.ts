@@ -212,9 +212,14 @@ export class SyncGroupsController {
       const groupRepository = makeMessagingGroupRepository();
       const syncUseCase = new SyncGroupsFromProvider(groupRepository);
 
+      // Usa businessProfileId da instância ou do token do usuário
+      const businessProfileId = instance.businessProfileId || req.user?.businessProfileId;
+
+      console.log('[SyncGroups] Sincronizando com businessProfileId:', businessProfileId);
+
       await syncUseCase.execute({
         userId,
-        businessProfileId: instance.businessProfileId,
+        businessProfileId,
         instanceId,
         groupType: 'SYNCED_WHATSAPP',
         groups: syncGroups
