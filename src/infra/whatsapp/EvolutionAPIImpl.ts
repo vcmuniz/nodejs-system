@@ -140,12 +140,22 @@ export class EvolutionAPIImpl implements IEvolutionAPI {
     request: SendWhatsAppMessageRequest,
   ): Promise<SendWhatsAppMessageResponse> {
     try {
-      const response = await this.client.post(`/message/sendText/${instanceName}`, {
+      const payload = {
         number: request.number,
         text: request.text,
         mediaUrl: request.mediaUrl,
         mediaType: request.mediaType,
-      });
+      };
+      
+      console.log('[EvolutionAPI] Enviando mensagem:');
+      console.log('  Instance:', instanceName);
+      console.log('  Payload:', JSON.stringify(payload, null, 2));
+      console.log('  URL:', `/message/sendText/${instanceName}`);
+      
+      const response = await this.client.post(`/message/sendText/${instanceName}`, payload);
+      
+      console.log('[EvolutionAPI] Resposta:', JSON.stringify(response.data, null, 2));
+      
       return response.data;
     } catch (error) {
       this.handleError(error, 'Erro ao enviar mensagem');
