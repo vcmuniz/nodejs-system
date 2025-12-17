@@ -150,21 +150,25 @@ export class SyncGroupsController {
       let groups: any[] = [];
       
       try {
-        const response = await axios.get(
-          `${evolutionUrl}/group/fetchAllGroups/${instance.channelInstanceId}`,
-          {
-            headers: {
-              'apikey': apiKey
-            }
+        const url = `${evolutionUrl}/group/fetchAllGroups/${instance.channelInstanceId}`;
+        console.log('[SyncGroups] Chamando URL:', url);
+        console.log('[SyncGroups] Headers:', { apikey: apiKey ? '***' : 'vazio' });
+        
+        const response = await axios.get(url, {
+          headers: {
+            'apikey': apiKey
           }
-        );
+        });
 
         groups = response.data || [];
+        console.log('[SyncGroups] Grupos encontrados:', groups.length);
       } catch (error: any) {
         console.error('[SyncGroups] Erro ao buscar grupos da Evolution API:', error.message);
+        console.error('[SyncGroups] Status:', error.response?.status);
+        console.error('[SyncGroups] Response data:', error.response?.data);
         return res.status(400).json({ 
           error: 'Erro ao buscar grupos da Evolution API',
-          details: error.message 
+          details: error.response?.data || error.message 
         });
       }
 
