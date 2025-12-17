@@ -117,7 +117,7 @@ export class SyncGroupsController {
             evolutionUrl = creds.baseUrl || creds.apiUrl || creds.url || 'http://localhost:8080';
             
             // Busca API Key (vários formatos possíveis)
-            apiKey = creds.apiKey || creds.apikey || creds.api_key || creds.key || creds.token || '';
+            apiKey = creds.apiToken || creds.apiKey || creds.apikey || creds.api_key || creds.key || creds.token || '';
             
             console.log('[SyncGroups] URL:', evolutionUrl);
             console.log('[SyncGroups] API Key encontrada:', !!apiKey);
