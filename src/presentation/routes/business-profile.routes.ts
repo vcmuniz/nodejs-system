@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { PrismaClient } from "@prisma/client";
-import { AuthMiddleware } from "../middlewares/AuthMiddleware";
+import { makeAuthMiddleware } from "../factories/middlewares/makeAuthMiddleware";
 import JsonWebTokenProvider from "../../infra/auth/JsonWebTokenProvider";
 import { ListUserBusinessProfiles } from "../../usercase/business-profile/ListUserBusinessProfiles";
 import { SelectBusinessProfile } from "../../usercase/business-profile/SelectBusinessProfile";
@@ -12,7 +12,7 @@ import {
 
 export const makeBusinessProfileRoutes = (prisma: PrismaClient) => {
   const router = Router();
-  const authMiddleware = new AuthMiddleware(new JsonWebTokenProvider());
+  const authMiddleware = makeAuthMiddleware();
   const tokenProvider = new JsonWebTokenProvider();
 
   // Use cases

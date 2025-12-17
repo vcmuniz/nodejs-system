@@ -1,5 +1,5 @@
 import { PrismaClient } from '@prisma/client';
-import { ITokenProvider } from '../../domain/auth/ITokenProvider';
+import { ITokenProvider } from '../../domain/providers/ITokenProvider';
 
 export interface SelectBusinessProfileInput {
   userId: string;
@@ -39,7 +39,7 @@ export class SelectBusinessProfile {
     }
 
     // Gerar novo token com businessProfileId
-    const token = this.tokenProvider.sign({
+    const token = await this.tokenProvider.generateToken({
       userId: input.userId,
       email: input.email,
       name: input.name,
