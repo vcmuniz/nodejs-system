@@ -3,6 +3,46 @@ import { AuthenticatedRequest } from '../../../interfaces/AuthenticatedRequest';
 import { RemoveGroupMember } from '../../../../usercase/messaging/groups/RemoveGroupMember';
 import { makeMessagingGroupRepository } from '../../../../infra/database/factories/makeMessagingGroupRepository';
 
+/**
+ * @swagger
+ * /api/messaging/groups/{groupId}/members/{identifier}:
+ *   delete:
+ *     tags:
+ *       - Messaging Groups
+ *     summary: Remove member from group
+ *     description: |
+ *       Remove a member from a custom group by identifier.
+ *       
+ *       **⚠️ Restrictions:**
+ *       - Only works for CUSTOM groups
+ *       - Synced groups members are managed automatically
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: groupId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Group ID
+ *         example: 'group-uuid-123'
+ *       - in: path
+ *         name: identifier
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Member identifier (phone, email, etc)
+ *         example: '5521999999999'
+ *     responses:
+ *       204:
+ *         description: Member removed successfully
+ *       400:
+ *         description: Cannot remove member from synced group
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: Group or member not found
+ */
 export class RemoveGroupMemberController {
   async handle(req: AuthenticatedRequest, res: Response): Promise<Response> {
     try {

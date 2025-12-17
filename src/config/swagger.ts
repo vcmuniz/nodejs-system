@@ -463,6 +463,113 @@ const options = {
           },
           required: ['id', 'userId', 'name', 'title', 'slug', 'fields', 'requiredFields', 'successMessage'],
         },
+        MessagingGroup: {
+          type: 'object',
+          properties: {
+            id: {
+              type: 'string',
+              example: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
+            },
+            userId: {
+              type: 'string',
+              example: 'user123',
+            },
+            businessProfileId: {
+              type: 'string',
+              example: 'business-profile-123',
+            },
+            instanceId: {
+              type: 'string',
+              example: 'instance-abc-123',
+            },
+            name: {
+              type: 'string',
+              example: 'Clientes VIP',
+            },
+            description: {
+              type: 'string',
+              example: 'Lista de clientes premium',
+            },
+            type: {
+              type: 'string',
+              enum: ['CUSTOM', 'SYNCED_WHATSAPP', 'SYNCED_TELEGRAM', 'SYNCED_EMAIL'],
+              example: 'CUSTOM',
+            },
+            externalGroupId: {
+              type: 'string',
+              example: '120363xxx@g.us',
+              description: 'External group ID (WhatsApp, Telegram, etc)',
+            },
+            metadata: {
+              type: 'object',
+              example: {},
+              description: 'Additional metadata',
+            },
+            isSynced: {
+              type: 'boolean',
+              example: false,
+              description: 'Whether group is synced from external API',
+            },
+            lastSyncAt: {
+              type: 'string',
+              format: 'date-time',
+              example: '2024-01-15T10:30:00Z',
+            },
+            createdAt: {
+              type: 'string',
+              format: 'date-time',
+              example: '2024-01-15T10:30:00Z',
+            },
+            updatedAt: {
+              type: 'string',
+              format: 'date-time',
+              example: '2024-01-15T10:30:00Z',
+            },
+          },
+          required: ['id', 'userId', 'instanceId', 'name', 'type', 'isSynced'],
+        },
+        MessagingGroupMember: {
+          type: 'object',
+          properties: {
+            id: {
+              type: 'string',
+              example: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
+            },
+            groupId: {
+              type: 'string',
+              example: 'group-uuid-123',
+            },
+            identifier: {
+              type: 'string',
+              example: '5521999999999',
+              description: 'Member identifier (phone, email, etc)',
+            },
+            identifierType: {
+              type: 'string',
+              enum: ['phone', 'email', 'telegram_id', 'custom'],
+              example: 'phone',
+            },
+            name: {
+              type: 'string',
+              example: 'João Silva',
+            },
+            metadata: {
+              type: 'object',
+              example: {},
+              description: 'Additional metadata',
+            },
+            isActive: {
+              type: 'boolean',
+              example: true,
+            },
+            addedAt: {
+              type: 'string',
+              format: 'date-time',
+              example: '2024-01-15T10:30:00Z',
+            },
+          },
+          required: ['id', 'groupId', 'identifier', 'identifierType', 'isActive'],
+        },
       },
     },
   },
