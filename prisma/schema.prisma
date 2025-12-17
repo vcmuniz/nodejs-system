@@ -35,23 +35,35 @@ model business_profiles {
   createdAt    DateTime                     @default(now())
   updatedAt    DateTime
   users        users                        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Multi-tenant relationships
+  categoriesRelation      categories[]
+  contactsRelation        contacts[]
+  leadCapturesRelation    lead_captures[]
+  messagingInstances      messaging_instances[]
+  productsRelation        products[]
+  quotesRelation          quotes[]
+  stockEntriesRelation    stock_entries[]
 
   @@index([userId])
 }
 
 model categories {
-  id          String     @id
-  userId      String
-  name        String
-  description String?    @db.Text
-  icon        String?
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime
-  users       users      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  products    products[]
+  id                String             @id
+  userId            String
+  businessProfileId String?
+  name              String
+  description       String?            @db.Text
+  icon              String?
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime
+  users             users              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  businessProfile   business_profiles? @relation(fields: [businessProfileId], references: [id], onDelete: Cascade)
+  products          products[]
 
   @@unique([userId, name])
   @@index([userId])
+  @@index([businessProfileId])
 }
 
 enum ChannelType {
@@ -79,20 +91,22 @@ model integration_credentials {
 }
 
 model messaging_instances {
-  id                 String               @id
+  id                 String                   @id
   userId             String
-  name               String?              
+  businessProfileId  String?
+  name               String?
   channel            ChannelType
   channelInstanceId  String
   channelPhoneOrId   String
-  status             String               @default("pending")
-  metadata           String?              @db.LongText
+  status             String                   @default("pending")
+  metadata           String?                  @db.LongText
   credentialId       String?
   lastConnectedAt    DateTime?
   lastDisconnectedAt DateTime?
-  createdAt          DateTime             @default(now())
+  createdAt          DateTime                 @default(now())
   updatedAt          DateTime
-  users              users                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  users              users                    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  businessProfile    business_profiles?       @relation(fields: [businessProfileId], references: [id], onDelete: Cascade)
   messaging_messages messaging_messages[]
   credential         integration_credentials? @relation(fields: [credentialId], references: [id], onDelete: SetNull)
 
@@ -101,6 +115,7 @@ model messaging_instances {
   @@index([status])
   @@index([userId])
   @@index([credentialId])
+  @@index([businessProfileId])
 }
 
 model messaging_messages {
@@ -133,25 +148,28 @@ model messaging_messages {
 }
 
 model products {
-  id            String          @id
-  userId        String
-  categoryId    String
-  name          String
-  description   String?         @db.Text
-  sku           String
-  price         Float
-  quantity      Int
-  image         String?
-  createdAt     DateTime        @default(now())
-  updatedAt     DateTime
-  categories    categories      @relation(fields: [categoryId], references: [id], onDelete: Cascade)
-  users         users           @relation(fields: [userId], references: [id], onDelete: Cascade)
-  quote_items   quote_items[]
-  stock_entries stock_entries[]
+  id                String             @id
+  userId            String
+  businessProfileId String?
+  categoryId        String
+  name              String
+  description       String?            @db.Text
+  sku               String
+  price             Float
+  quantity          Int
+  image             String?
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime
+  categories        categories         @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  users             users              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  businessProfile   business_profiles? @relation(fields: [businessProfileId], references: [id], onDelete: Cascade)
+  quote_items       quote_items[]
+  stock_entries     stock_entries[]
 
   @@unique([userId, sku])
   @@index([categoryId])
   @@index([userId])
+  @@index([businessProfileId])
 }
 
 model quote_items {
@@ -171,20 +189,23 @@ model quote_items {
 }
 
 model quotes {
-  id          String        @id
-  userId      String
-  status      String        @default("pending")
-  discount    Float         @default(0)
-  tax         Float         @default(0)
-  total       Float
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime
-  quoteNumber String?
-  quote_items quote_items[]
-  users       users         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id                String             @id
+  userId            String
+  businessProfileId String?
+  status            String             @default("pending")
+  discount          Float              @default(0)
+  tax               Float              @default(0)
+  total             Float
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime
+  quoteNumber       String?
+  quote_items       quote_items[]
+  users             users              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  businessProfile   business_profiles? @relation(fields: [businessProfileId], references: [id], onDelete: Cascade)
 
   @@index([status])
   @@index([userId])
+  @@index([businessProfileId])
 }
 
 model scheduled_messages {
@@ -243,20 +264,23 @@ model sessions {
 }
 
 model stock_entries {
-  id        String   @id
-  userId    String
-  productId String
-  quantity  Int
-  type      String   @default("in")
-  reason    String?
-  reference String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime
-  products  products @relation(fields: [productId], references: [id], onDelete: Cascade)
-  users     users    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id                String             @id
+  userId            String
+  businessProfileId String?
+  productId         String
+  quantity          Int
+  type              String             @default("in")
+  reason            String?
+  reference         String?
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime
+  products          products           @relation(fields: [productId], references: [id], onDelete: Cascade)
+  users             users              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  businessProfile   business_profiles? @relation(fields: [businessProfileId], references: [id], onDelete: Cascade)
 
   @@index([productId])
   @@index([userId])
+  @@index([businessProfileId])
 }
 
 model users {
@@ -360,8 +384,9 @@ enum users_provider {
 }
 
 model contacts {
-  id              String               @id @default(uuid())
-  userId          String
+  id                String               @id @default(uuid())
+  userId            String
+  businessProfileId String?
   
   name            String
   email           String?
@@ -399,10 +424,12 @@ model contacts {
   convertedAt     DateTime?
   
   user            users                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  businessProfile business_profiles?   @relation(fields: [businessProfileId], references: [id], onDelete: Cascade)
   leadCapture     lead_captures?       @relation(fields: [leadCaptureId], references: [id])
   activities      contact_activities[]
   
   @@index([userId])
+  @@index([businessProfileId])
   @@index([email])
   @@index([phone])
   @@index([isLead])
@@ -412,8 +439,9 @@ model contacts {
 }
 
 model lead_captures {
-  id               String     @id @default(uuid())
-  userId           String
+  id                String             @id @default(uuid())
+  userId            String
+  businessProfileId String?
   
   name             String
   title            String
@@ -436,10 +464,12 @@ model lead_captures {
   createdAt        DateTime   @default(now())
   updatedAt        DateTime   @updatedAt
   
-  user             users      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user             users              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  businessProfile  business_profiles? @relation(fields: [businessProfileId], references: [id], onDelete: Cascade)
   contacts         contacts[]
   
   @@index([userId])
+  @@index([businessProfileId])
   @@index([slug])
   @@index([isActive])
 }

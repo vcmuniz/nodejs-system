@@ -4,6 +4,7 @@ import { ILeadCaptureRepository } from "../../domain/repositories/ILeadCaptureRe
 
 export interface ListLeadCapturesInput {
   userId: string;
+  businessProfileId: string;
 }
 
 export interface ListLeadCapturesOutput {
@@ -14,7 +15,10 @@ export class ListLeadCaptures implements IUseCase<ListLeadCapturesInput, ListLea
   constructor(private leadCaptureRepository: ILeadCaptureRepository) {}
 
   async execute(input: ListLeadCapturesInput): Promise<ListLeadCapturesOutput> {
-    const leadCaptures = await this.leadCaptureRepository.findByUserId(input.userId);
+    const leadCaptures = await this.leadCaptureRepository.findByUserId(
+      input.userId, 
+      input.businessProfileId
+    );
 
     return { leadCaptures };
   }

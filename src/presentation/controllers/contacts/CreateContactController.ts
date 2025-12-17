@@ -82,13 +82,25 @@ export class CreateContactController implements IController {
   async handle(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
       const userId = req.user?.id;
+      const businessProfileId = req.user?.businessProfileId;
+      
       if (!userId) {
         res.status(401).json({ success: false, message: 'Não autorizado' });
         return;
       }
 
+      if (!businessProfileId) {
+        res.status(400).json({ 
+          success: false, 
+          message: 'Selecione uma organização primeiro',
+          action: 'SELECT_BUSINESS_PROFILE'
+        });
+        return;
+      }
+
       const result = await this.createContact.execute({
         userId,
+        businessProfileId,
         ...req.body
       });
 

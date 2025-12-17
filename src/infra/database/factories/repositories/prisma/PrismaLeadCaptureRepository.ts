@@ -23,9 +23,15 @@ export class PrismaLeadCaptureRepository implements ILeadCaptureRepository {
     return this.toDomain(data);
   }
 
-  async findByUserId(userId: string): Promise<LeadCapture[]> {
+  async findByUserId(userId: string, businessProfileId?: string): Promise<LeadCapture[]> {
+    const where: any = { userId };
+    
+    if (businessProfileId) {
+      where.businessProfileId = businessProfileId;
+    }
+
     const data = await this.prisma.lead_captures.findMany({
-      where: { userId },
+      where,
       orderBy: { createdAt: 'desc' }
     });
 

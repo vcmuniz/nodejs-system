@@ -114,13 +114,25 @@ export class CreateLeadCaptureController implements IController {
   async handle(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
       const userId = req.user?.id;
+      const businessProfileId = req.user?.businessProfileId;
+      
       if (!userId) {
         res.status(401).json({ success: false, message: 'Não autorizado' });
         return;
       }
 
+      if (!businessProfileId) {
+        res.status(400).json({ 
+          success: false, 
+          message: 'Selecione uma organização primeiro',
+          action: 'SELECT_BUSINESS_PROFILE'
+        });
+        return;
+      }
+
       const result = await this.createLeadCapture.execute({
         userId,
+        businessProfileId,
         ...req.body
       });
 
@@ -144,12 +156,26 @@ export class ListLeadCapturesController implements IController {
   async handle(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
       const userId = req.user?.id;
+      const businessProfileId = req.user?.businessProfileId;
+      
       if (!userId) {
         res.status(401).json({ success: false, message: 'Não autorizado' });
         return;
       }
 
-      const result = await this.listLeadCaptures.execute({ userId });
+      if (!businessProfileId) {
+        res.status(400).json({ 
+          success: false, 
+          message: 'Selecione uma organização primeiro',
+          action: 'SELECT_BUSINESS_PROFILE'
+        });
+        return;
+      }
+
+      const result = await this.listLeadCaptures.execute({ 
+        userId, 
+        businessProfileId 
+      });
 
       res.status(200).json({
         success: true,

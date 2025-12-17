@@ -24,6 +24,11 @@ export class PrismaContactRepository implements IContactRepository {
   async findByUserId(userId: string, filters?: ContactFilters): Promise<Contact[]> {
     const where: any = { userId };
 
+    // MULTI-TENANT: Filtrar por businessProfileId se fornecido
+    if (filters?.businessProfileId) {
+      where.businessProfileId = filters.businessProfileId;
+    }
+
     if (filters?.status) {
       where.status = filters.status;
     }

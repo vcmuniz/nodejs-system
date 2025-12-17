@@ -15,6 +15,7 @@ import { makeQuoteRoutes } from "./quote.routes";
 import integrationCredentialsRoutes from "./integration-credentials.routes";
 import { makeContactRoutes } from "./contacts.routes";
 import { makeLeadCaptureRoutes, makePublicLeadRoutes } from "./lead-captures.routes";
+import { makeBusinessProfileRoutes } from "./business-profile.routes";
 
 const prisma = new PrismaClient();
 
@@ -35,4 +36,6 @@ export default (app: Express): void => {
     app.use("/api/contacts", makeContactRoutes(prisma));
     app.use("/api/lead-captures", makeLeadCaptureRoutes(prisma));
     app.use("/public/lead", makePublicLeadRoutes(prisma));
+    
+    app.use("/api/business-profiles", makeBusinessProfileRoutes(prisma));
 }

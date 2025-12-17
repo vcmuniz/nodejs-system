@@ -13,6 +13,7 @@ export interface IContactRepository {
 }
 
 export interface ContactFilters {
+  businessProfileId?: string;
   status?: string;
   isLead?: boolean;
   leadCaptureId?: string;

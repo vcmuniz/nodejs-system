@@ -6,6 +6,7 @@ import { ContactActivity } from "../../domain/models/ContactActivity";
 
 export interface CreateContactInput {
   userId: string;
+  businessProfileId: string;
   name: string;
   email?: string;
   phone?: string;

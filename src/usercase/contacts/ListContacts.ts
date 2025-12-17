@@ -4,6 +4,7 @@ import { IContactRepository, ContactFilters } from "../../domain/repositories/IC
 
 export interface ListContactsInput {
   userId: string;
+  businessProfileId: string;
   filters?: ContactFilters;
 }
 
@@ -24,8 +25,14 @@ export class ListContacts implements IUseCase<ListContactsInput, ListContactsOut
     const page = input.filters?.page || 1;
     const limit = input.filters?.limit || 20;
 
-    const contacts = await this.contactRepository.findByUserId(input.userId, input.filters);
-    const total = await this.contactRepository.count(input.userId, input.filters);
+    // Garantir que businessProfileId está nos filtros
+    const filters = {
+      ...input.filters,
+      businessProfileId: input.businessProfileId
+    };
+
+    const contacts = await this.contactRepository.findByUserId(input.userId, filters);
+    const total = await this.contactRepository.count(input.userId, filters);
     const totalPages = Math.ceil(total / limit);
 
     return {

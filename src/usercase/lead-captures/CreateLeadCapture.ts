@@ -4,6 +4,7 @@ import { ILeadCaptureRepository } from "../../domain/repositories/ILeadCaptureRe
 
 export interface CreateLeadCaptureInput {
   userId: string;
+  businessProfileId: string;
   name: string;
   title: string;
   description?: string;
