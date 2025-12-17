@@ -29,14 +29,23 @@ export class CreateMessagingInstance {
   ) {}
 
   async execute(input: CreateMessagingInstanceInput): Promise<CreateMessagingInstanceOutput> {
-    // 1. Verificar se a instância já existe
+    // 1. Verificar se a instância já existe no banco
     const existing = await this.messagingRepository.getInstanceByChannelId(
       input.channelInstanceId,
       input.channel
     );
 
+    let instance: MessagingInstanceData;
+    let isNewInstance = false;
+
     if (existing && existing.userId === input.userId) {
-      throw new Error('Instância já existe para este usuário');
+      console.log(`[CreateMessagingInstance] Instância já existe no banco: ${input.channelInstanceId}`);
+      instance = existing;
+    } else if (existing && existing.userId !== input.userId) {
+      throw new Error('Instância já existe para outro usuário');
+    } else {
+      // Instância não existe no banco, será criada
+      isNewInstance = true;
     }
 
     // 2. Buscar credenciais automaticamente se não forem passadas
@@ -59,29 +68,50 @@ export class CreateMessagingInstance {
       }
     }
 
-    // 3. Criar registro no banco
-    const instance = await this.messagingRepository.saveInstance({
-      id: randomUUID(),
-      userId: input.userId,
-      channel: input.channel,
-      channelInstanceId: input.channelInstanceId,
-      channelPhoneOrId: input.channelPhoneOrId,
-      status: ConnectionStatus.PENDING,
-      credentials,
-      credentialId: usedCredentialId,
-      metadata: {},
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    });
-
-    // 4. Conectar através do adaptador (passando credentials para criar Evolution API com credenciais corretas)
+    // 3. Criar adapter com as credenciais corretas
     const adapter = this.adapterFactory.createAdapter(input.channel, credentials);
+
+    // 4. Verificar se a instância existe na Evolution API
+    let needsCreate = isNewInstance;
+    
+    if (!isNewInstance) {
+      // Verificar na Evolution API se a instância realmente existe
+      try {
+        console.log(`[CreateMessagingInstance] Verificando instância na Evolution API: ${input.channelInstanceId}`);
+        await (adapter as any).evolutionAPI?.getInstance(input.channelInstanceId);
+        console.log(`[CreateMessagingInstance] Instância encontrada na Evolution API`);
+        needsCreate = false;
+      } catch (error: any) {
+        console.log(`[CreateMessagingInstance] Instância não encontrada na Evolution API, será criada`);
+        needsCreate = true;
+      }
+    }
+
+    // 5. Criar registro no banco se necessário
+    if (isNewInstance) {
+      instance = await this.messagingRepository.saveInstance({
+        id: randomUUID(),
+        userId: input.userId,
+        channel: input.channel,
+        channelInstanceId: input.channelInstanceId,
+        channelPhoneOrId: input.channelPhoneOrId,
+        status: ConnectionStatus.PENDING,
+        credentials,
+        credentialId: usedCredentialId,
+        metadata: {},
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+    }
+
+    // 6. Conectar através do adaptador
     const connectResult = await adapter.connect({
       channelInstanceId: input.channelInstanceId,
       credentials,
+      needsCreate, // Informa se precisa criar ou apenas conectar
     });
 
-    // 5. Atualizar status da instância
+    // 7. Atualizar status da instância
     await this.messagingRepository.updateInstanceStatus(instance.id, connectResult.status);
 
     if (connectResult.qrCode) {
@@ -92,7 +122,7 @@ export class CreateMessagingInstance {
       instanceId: instance.id,
       status: connectResult.status,
       qrCode: connectResult.qrCode,
-      message: connectResult.message,
+      message: connectResult.message || (isNewInstance ? 'Instância criada' : 'Instância já existente'),
     };
   }
 }

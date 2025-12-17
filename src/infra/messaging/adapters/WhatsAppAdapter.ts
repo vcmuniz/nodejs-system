@@ -10,48 +10,50 @@ export class WhatsAppAdapter implements IMessagingAdapter {
     return MessagingChannel.WHATSAPP_EVOLUTION;
   }
 
-  async connect(params: { channelInstanceId: string; credentials?: any }): Promise<any> {
+  async connect(params: { channelInstanceId: string; credentials?: any; needsCreate?: boolean }): Promise<any> {
     try {
-      console.log(`[WhatsAppAdapter] Criando instância: ${params.channelInstanceId}`);
+      const needsCreate = params.needsCreate !== false; // Default: true
       
-      // 1. Criar a instância na Evolution API
-      const createResponse = await this.evolutionAPI.createInstance({
-        instanceName: params.channelInstanceId,
-        integration: 'WHATSAPP-BAILEYS',
-      });
+      console.log(`[WhatsAppAdapter] Conectando instância: ${params.channelInstanceId}, needsCreate: ${needsCreate}`);
       
-      console.log(`[WhatsAppAdapter] Instância criada:`, createResponse);
+      // Se precisa criar, tenta criar primeiro
+      if (needsCreate) {
+        try {
+          console.log(`[WhatsAppAdapter] Criando instância: ${params.channelInstanceId}`);
+          await this.evolutionAPI.createInstance({
+            instanceName: params.channelInstanceId,
+            integration: 'WHATSAPP-BAILEYS',
+          });
+          console.log(`[WhatsAppAdapter] Instância criada com sucesso`);
+        } catch (createError: any) {
+          // Se erro 409 (já existe), ignora e continua
+          if (createError.response?.status === 409 || createError.message?.includes('já existe')) {
+            console.log(`[WhatsAppAdapter] Instância já existe, continuando...`);
+          } else {
+            throw createError;
+          }
+        }
+      }
       
-      // 2. Conectar para gerar QR Code
+      // Conectar para gerar QR Code
+      console.log(`[WhatsAppAdapter] Conectando para gerar QR Code: ${params.channelInstanceId}`);
       const connectResponse = await this.evolutionAPI.connectInstance(params.channelInstanceId);
       
-      console.log(`[WhatsAppAdapter] QR Code gerado:`, connectResponse);
+      console.log(`[WhatsAppAdapter] QR Code gerado com sucesso`);
       
       return {
         status: ConnectionStatus.CONNECTING,
         qrCode: connectResponse.qrcode?.base64,
-        message: 'Instância criada. Escaneie o QR Code no WhatsApp.',
+        message: needsCreate 
+          ? 'Instância criada. Escaneie o QR Code no WhatsApp.' 
+          : 'Instância já existente. Escaneie o QR Code.',
       };
     } catch (error: any) {
-      console.error(`[WhatsAppAdapter] Erro ao conectar:`, error);
-      
-      // Se a instância já existe, apenas tenta conectar
-      if (error.message?.includes('já existe') || error.response?.status === 409) {
-        try {
-          const connectResponse = await this.evolutionAPI.connectInstance(params.channelInstanceId);
-          return {
-            status: ConnectionStatus.CONNECTING,
-            qrCode: connectResponse.qrcode?.base64,
-            message: 'Instância já existe. Escaneie o QR Code.',
-          };
-        } catch (connectError) {
-          console.error(`[WhatsAppAdapter] Erro ao reconectar:`, connectError);
-        }
-      }
+      console.error(`[WhatsAppAdapter] Erro ao conectar:`, error.response?.data || error.message);
       
       return {
         status: ConnectionStatus.ERROR,
-        message: error.message || 'Erro ao criar instância',
+        message: error.response?.data?.message || error.message || 'Erro ao criar/conectar instância',
       };
     }
   }
