@@ -52,11 +52,11 @@ export class ConnectInstance {
       console.log(`[ConnectInstance] Resposta da Evolution:`, JSON.stringify(connectResponse, null, 2));
 
       // Persiste o QR code na base de dados
-      if (connectResponse.qrcode?.base64) {
+      if (connectResponse.base64) {
         console.log(`[ConnectInstance] Salvando QR code...`);
         await this.whatsAppRepository.updateInstanceQrCode(
           input.instanceName,
-          connectResponse.qrcode.base64,
+          connectResponse.base64,
         );
         console.log(`[ConnectInstance] QR code salvo com sucesso`);
       } else {
@@ -78,8 +78,11 @@ export class ConnectInstance {
         success: true,
         data: {
           instanceName: input.instanceName,
-          status: connectResponse.qrcode ? 'open' : 'close',
-          qrcode: connectResponse.qrcode,
+          status: connectResponse.base64 ? 'open' : 'close',
+          qrcode: {
+            code: connectResponse.code,
+            base64: connectResponse.base64,
+          },
         },
       };
     } catch (error) {
