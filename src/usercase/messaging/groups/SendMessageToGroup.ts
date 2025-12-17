@@ -1,5 +1,7 @@
 import { IMessagingGroupRepository } from '../../../domain/messaging/repositories/IMessagingGroupRepository';
 import { IMessagingRepository } from '../../../ports/IMessagingRepository';
+import { SendMessage } from '../SendMessage';
+import { MessagingAdapterFactory } from '../../../infra/messaging/MessagingAdapterFactory';
 import { v4 as uuidv4 } from 'uuid';
 
 interface SendMessageToGroupRequest {
@@ -37,6 +39,11 @@ export class SendMessageToGroup {
       throw new Error('Instância não encontrada');
     }
 
+    console.log('[SendMessageToGroup] Grupo:', group.name);
+    console.log('[SendMessageToGroup] Total de membros:', members.length);
+    console.log('[SendMessageToGroup] Tipo de grupo:', group.type);
+    console.log('[SendMessageToGroup] ExternalGroupId:', group.externalGroupId);
+
     const result: SendResult = {
       total: members.length,
       sent: 0,
@@ -44,31 +51,64 @@ export class SendMessageToGroup {
       errors: [],
     };
 
-    for (const member of members) {
+    // Se for grupo sincronizado do WhatsApp, envia para o grupo
+    if (group.isSynced && group.externalGroupId) {
+      console.log('[SendMessageToGroup] Enviando para grupo do WhatsApp:', group.externalGroupId);
+      
       try {
-        await this.messagingRepository.logMessage({
-          id: uuidv4(),
+        const adapterFactory = new MessagingAdapterFactory();
+        const sendMessage = new SendMessage(this.messagingRepository, adapterFactory);
+        
+        await sendMessage.execute({
           userId: request.userId,
-          instanceId: group.instanceId,
           channel: instance.channel,
-          remoteJid: member.identifier,
+          channelInstanceId: instance.channelInstanceId,
+          remoteJid: group.externalGroupId, // Envia para o grupo
           message: request.message,
-          direction: 'sent',
-          status: 'pending',
           mediaUrl: request.mediaUrl,
           mediaType: request.mediaType,
-          retries: 0,
-          maxRetries: 3,
-          createdAt: new Date(),
-          updatedAt: new Date(),
         });
-        result.sent++;
+        
+        result.sent = members.length; // Considera que todos receberam
+        console.log('[SendMessageToGroup] Mensagem enviada para o grupo com sucesso!');
       } catch (error: any) {
-        result.failed++;
+        console.error('[SendMessageToGroup] Erro ao enviar para grupo:', error.message);
+        result.failed = members.length;
         result.errors.push({
-          identifier: member.identifier,
+          identifier: group.externalGroupId,
           error: error.message,
         });
+      }
+    } else {
+      // Grupo customizado - envia para cada membro individualmente
+      console.log('[SendMessageToGroup] Enviando individualmente para cada membro...');
+      
+      const adapterFactory = new MessagingAdapterFactory();
+      const sendMessage = new SendMessage(this.messagingRepository, adapterFactory);
+
+      for (const member of members) {
+        try {
+          console.log('[SendMessageToGroup] Enviando para:', member.identifier);
+          
+          await sendMessage.execute({
+            userId: request.userId,
+            channel: instance.channel,
+            channelInstanceId: instance.channelInstanceId,
+            remoteJid: member.identifier,
+            message: request.message,
+            mediaUrl: request.mediaUrl,
+            mediaType: request.mediaType,
+          });
+          
+          result.sent++;
+        } catch (error: any) {
+          console.error('[SendMessageToGroup] Erro ao enviar para', member.identifier, ':', error.message);
+          result.failed++;
+          result.errors.push({
+            identifier: member.identifier,
+            error: error.message,
+          });
+        }
       }
     }
 
