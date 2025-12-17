@@ -111,8 +111,16 @@ export class SyncGroupsController {
               ? JSON.parse(credential.credentials) 
               : credential.credentials;
             
-            evolutionUrl = creds.baseUrl || creds.apiUrl || 'http://localhost:8080';
-            apiKey = creds.apiKey || creds.apikey || '';
+            console.log('[SyncGroups] Credenciais encontradas:', Object.keys(creds));
+            
+            // Busca URL
+            evolutionUrl = creds.baseUrl || creds.apiUrl || creds.url || 'http://localhost:8080';
+            
+            // Busca API Key (vários formatos possíveis)
+            apiKey = creds.apiKey || creds.apikey || creds.api_key || creds.key || creds.token || '';
+            
+            console.log('[SyncGroups] URL:', evolutionUrl);
+            console.log('[SyncGroups] API Key encontrada:', !!apiKey);
           }
         } catch (error) {
           console.log('[SyncGroups] Erro ao buscar credenciais:', error);
@@ -122,16 +130,22 @@ export class SyncGroupsController {
 
       // Se não tem credenciais, usa as do .env (fallback)
       if (!apiKey) {
+        console.log('[SyncGroups] Usando ENV como fallback');
         evolutionUrl = ENV.EVOLUTION_API_URL || 'http://localhost:8080';
         apiKey = ENV.EVOLUTION_API_KEY || '';
       }
 
       if (!apiKey) {
+        console.error('[SyncGroups] Nenhuma API Key disponível (banco ou ENV)');
         return res.status(400).json({ 
           error: 'API Key não configurada',
           details: 'Configure as credenciais da Evolution API no sistema'
         });
       }
+
+      console.log('[SyncGroups] Buscando grupos da Evolution API...');
+      console.log('[SyncGroups] URL:', evolutionUrl);
+      console.log('[SyncGroups] Instance:', instance.channelInstanceId);
 
       let groups: any[] = [];
       
