@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { PrismaClient } from "@prisma/client";
 import { makeAuthMiddleware } from "../factories/middlewares/makeAuthMiddleware";
+import { requireBusinessProfile } from "../../middlewares/requireBusinessProfile";
 import { PrismaContactRepository } from "../../infra/database/factories/repositories/prisma/PrismaContactRepository";
 import { PrismaContactActivityRepository } from "../../infra/database/factories/repositories/prisma/PrismaContactActivityRepository";
 import { CreateContact } from "../../usercase/contacts/CreateContact";
@@ -32,27 +33,27 @@ export function makeContactRoutes(prisma: PrismaClient) {
   const deleteContact = new DeleteContact(contactRepository);
   const convertLead = new ConvertLeadToContact(contactRepository, activityRepository);
 
-  router.post("/", authMiddleware.authenticate(), (req, res) => 
+  router.post("/", authMiddleware.authenticate(), requireBusinessProfile, (req, res) => 
     new CreateContactController(createContact).handle(req, res)
   );
 
-  router.get("/", authMiddleware.authenticate(), (req, res) => 
+  router.get("/", authMiddleware.authenticate(), requireBusinessProfile, (req, res) => 
     new ListContactsController(listContacts).handle(req, res)
   );
 
-  router.get("/:id", authMiddleware.authenticate(), (req, res) => 
+  router.get("/:id", authMiddleware.authenticate(), requireBusinessProfile, (req, res) => 
     new GetContactController(getContact).handle(req, res)
   );
 
-  router.put("/:id", authMiddleware.authenticate(), (req, res) => 
+  router.put("/:id", authMiddleware.authenticate(), requireBusinessProfile, (req, res) => 
     new UpdateContactController(updateContact).handle(req, res)
   );
 
-  router.delete("/:id", authMiddleware.authenticate(), (req, res) => 
+  router.delete("/:id", authMiddleware.authenticate(), requireBusinessProfile, (req, res) => 
     new DeleteContactController(deleteContact).handle(req, res)
   );
 
-  router.post("/:id/convert", authMiddleware.authenticate(), (req, res) => 
+  router.post("/:id/convert", authMiddleware.authenticate(), requireBusinessProfile, (req, res) => 
     new ConvertLeadController(convertLead).handle(req, res)
   );
 

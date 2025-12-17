@@ -4,6 +4,7 @@ import { makeProductRepository } from "../../infra/database/factories/makeProduc
 import { CreateStockEntryController } from "../controllers/inventory/CreateStockEntryController";
 import { ListStockEntriesController } from "../controllers/inventory/ListStockEntriesController";
 import { makeAuthMiddleware } from "../factories/middlewares/makeAuthMiddleware";
+import { requireBusinessProfile } from "../../middlewares/requireBusinessProfile";
 
 export function makeStockRoutes() {
     const router = Router();
@@ -11,8 +12,8 @@ export function makeStockRoutes() {
     const stockRepository = makeStockEntryRepository();
     const productRepository = makeProductRepository();
 
-    router.post("/", authMiddleware.authenticate(), (req, res) => new CreateStockEntryController(stockRepository, productRepository).handle(req, res));
-    router.get("/", authMiddleware.authenticate(), (req, res) => new ListStockEntriesController(stockRepository).handle(req, res));
+    router.post("/", authMiddleware.authenticate(), requireBusinessProfile, (req, res) => new CreateStockEntryController(stockRepository, productRepository).handle(req, res));
+    router.get("/", authMiddleware.authenticate(), requireBusinessProfile, (req, res) => new ListStockEntriesController(stockRepository).handle(req, res));
 
     return router;
 }

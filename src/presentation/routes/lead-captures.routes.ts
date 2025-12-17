@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { PrismaClient } from "@prisma/client";
 import { makeAuthMiddleware } from "../factories/middlewares/makeAuthMiddleware";
+import { requireBusinessProfile } from "../../middlewares/requireBusinessProfile";
 import { PrismaLeadCaptureRepository } from "../../infra/database/factories/repositories/prisma/PrismaLeadCaptureRepository";
 import { PrismaContactRepository } from "../../infra/database/factories/repositories/prisma/PrismaContactRepository";
 import { PrismaContactActivityRepository } from "../../infra/database/factories/repositories/prisma/PrismaContactActivityRepository";
@@ -28,11 +29,11 @@ export function makeLeadCaptureRoutes(prisma: PrismaClient) {
   const getLeadCapture = new GetLeadCapture(leadCaptureRepository);
   const captureLead = new CaptureLead(leadCaptureRepository, contactRepository, activityRepository);
 
-  router.post("/", authMiddleware.authenticate(), (req, res) => 
+  router.post("/", authMiddleware.authenticate(), requireBusinessProfile, (req, res) => 
     new CreateLeadCaptureController(createLeadCapture).handle(req, res)
   );
 
-  router.get("/", authMiddleware.authenticate(), (req, res) => 
+  router.get("/", authMiddleware.authenticate(), requireBusinessProfile, (req, res) => 
     new ListLeadCapturesController(listLeadCaptures).handle(req, res)
   );
 
