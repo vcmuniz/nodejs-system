@@ -62,8 +62,8 @@ export class SendMessage {
     });
 
     try {
-      // 3. Obter adaptador do canal
-      const adapter = this.adapterFactory.createAdapter(input.channel);
+      // 3. Obter adaptador do canal com as credenciais da instância
+      const adapter = this.adapterFactory.createAdapter(input.channel, instance.credentials);
 
       // 4. Enviar mensagem através do adaptador
       const result = await adapter.sendMessage({

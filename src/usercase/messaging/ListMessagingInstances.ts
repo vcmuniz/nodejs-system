@@ -8,7 +8,7 @@ export interface ListMessagingInstancesInput {
   channel?: MessagingChannel;
 }
 
-export type MessagingInstanceSummary = Omit<MessagingInstanceData, 'qrCode' | 'credentials'>;
+export type MessagingInstanceSummary = Omit<MessagingInstanceData, 'credentials'>;
 
 export class ListMessagingInstances {
   constructor(private messagingRepository: IMessagingRepository) {}
@@ -16,7 +16,7 @@ export class ListMessagingInstances {
   async execute(input: ListMessagingInstancesInput): Promise<MessagingInstanceSummary[]> {
     const instances = await this.messagingRepository.listInstancesByUserId(input.userId, input.channel);
     
-    // Remove QR Code e credentials da listagem (dados sensíveis/grandes)
-    return instances.map(({ qrCode, credentials, ...instance }) => instance);
+    // Remove credentials da listagem (dados sensíveis)
+    return instances.map(({ credentials, ...instance }) => instance);
   }
 }

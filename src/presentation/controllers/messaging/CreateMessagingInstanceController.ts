@@ -3,11 +3,12 @@ import { Response } from 'express';
 import { AuthenticatedRequest } from '../../interfaces/AuthenticatedRequest';
 import { makeCreateMessagingInstanceUseCase } from '../../factories/messaging/makeMessagingUseCases';
 import { MessagingChannel } from '../../../domain/messaging/MessagingChannel';
+import { ENV } from '../../../config/enviroments';
 
 export class CreateMessagingInstanceController {
   async handle(req: AuthenticatedRequest, res: Response): Promise<Response> {
     try {
-      const { channel, channelInstanceId, channelPhoneOrId, credentials, credentialId } = req.body;
+      const { name, channel, channelInstanceId, channelPhoneOrId, credentials, credentialId } = req.body;
       const userId = req.user?.id;
 
       if (!userId) {
@@ -20,16 +21,15 @@ export class CreateMessagingInstanceController {
         });
       }
 
-      // Construir URL base automaticamente a partir do request
-      const protocol = req.protocol; // http ou https
-      const host = req.get('host'); // localhost:3000 ou api.seuapp.com
-      const webhookBaseUrl = `${protocol}://${host}`;
+      // Usar APP_DOMAIN do .env para webhook
+      const webhookBaseUrl = ENV.APP_DOMAIN;
 
       console.log(`[CreateMessagingInstanceController] Webhook base URL: ${webhookBaseUrl}`);
 
       const useCase = makeCreateMessagingInstanceUseCase();
       const result = await useCase.execute({
         userId,
+        name, // Nome amigável (opcional)
         channel: channel as MessagingChannel,
         channelInstanceId,
         channelPhoneOrId,

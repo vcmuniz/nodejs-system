@@ -10,7 +10,6 @@ export interface IMessagingRepository {
   getInstanceById(instanceId: string): Promise<MessagingInstanceData | null>;
   getInstanceByChannelId(channelInstanceId: string, channel: MessagingChannel): Promise<MessagingInstanceData | null>;
   updateInstanceStatus(instanceId: string, status: ConnectionStatus): Promise<void>;
-  updateInstanceQrCode(instanceId: string, qrCode: string): Promise<void>;
   updateInstanceMetadata(instanceId: string, metadata: Record<string, any>): Promise<void>;
   deleteInstance(instanceId: string): Promise<void>;
 

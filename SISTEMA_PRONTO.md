@@ -1,231 +1,289 @@
-# ✅ SISTEMA DE ESTOQUE - PRONTO PARA USAR
+# ✅ Sistema de Messaging WhatsApp - PRONTO!
 
-## 🎉 Status: COMPILANDO SEM ERROS!
+## 🎉 Funcionalidades Implementadas
 
+### 1. ✅ Criação/Conexão de Instâncias
+- **Endpoint:** `POST /api/messaging/instance`
+- Cria instância na Evolution API
+- Configura webhook automaticamente
+- Verifica status real antes de retornar
+- Retorna QR Code se necessário
+
+### 2. ✅ QR Code Fresco Sob Demanda
+- **Endpoint:** `GET /api/messaging/instance/{id}/qrcode`
+- Gera QR Code novo a qualquer momento
+- QR Code válido por 60 segundos
+- Não salva no banco (segurança)
+
+### 3. ✅ Auto-Atualização de Status
+**3 formas de atualização:**
+
+#### A) Via Webhook `connection.update`
 ```
-$ npx tsc --noEmit
-No errors found! ✅
+Evolution envia → connection.update → Status atualizado
 ```
+
+#### B) Via Mensagens
+```
+Mensagem recebida/enviada → Status = CONNECTED automaticamente
+```
+
+#### C) Na Criação da Instância
+```
+POST /instance → Verifica status real → Retorna status correto
+```
+
+### 4. ✅ Listagem de Instâncias
+- **Endpoint:** `GET /api/messaging/instances`
+- Lista todas as instâncias do usuário
+- Filtra por canal (opcional)
+- Remove credenciais (segurança)
+
+### 5. ✅ Envio de Mensagens
+- **Endpoint:** `POST /api/messaging/message/send`
+- Envia mensagens via Evolution API
+- Suporte a texto e mídia
+- Log automático no banco
+
+### 6. ✅ Webhooks Processados
+- ✅ `connection.update` - Atualiza status
+- ✅ `qrcode.updated` - Loga (não salva)
+- ✅ `messages.upsert` - Auto-conecta se receber mensagem
+- ✅ `messages.update` - Auto-conecta se atualizar mensagem
 
 ---
 
-## 📦 O QUE FOI IMPLEMENTADO
+## 🎯 Fluxo Completo de Conexão
 
-### Core Inventory System
-- ✅ **Modelos de Domínio** completos em TypeScript
-  - Category (Categorias)
-  - Product (Produtos com fotos, tipos, preços)
-  - StockEntry (Controle de estoque)
-  - Quote (Orçamentos)
-  - Order (Pedidos)
-
-### Funcionalidades
-- ✅ Cadastro de categorias
-- ✅ Cadastro de produtos com tipos (PHYSICAL, DIGITAL, SERVICE)
-- ✅ Upload de fotos
-- ✅ Controle de entrada/saída de estoque
-- ✅ Sistema de orçamentos
-- ✅ Sistema de pedidos
-- ✅ Relatórios
-- ✅ Dashboard
-
-### Segurança & Qualidade
-- ✅ Multi-tenant (isolamento por usuário)
-- ✅ Autenticação JWT
-- ✅ Validação de entrada
-- ✅ TypeScript 100% type-safe
-- ✅ Zero erros de compilação
-
----
-
-## 🚀 PRÓXIMOS PASSOS
-
-### 1. Implementar Services
+### Passo 1: Criar Instância
 ```bash
-mkdir -p src/application/inventory/{category,product,stock,quote,order}
-# Criar serviços para cada funcionalidade
-```
-
-### 2. Implementar Controllers
-```bash
-# Criar controllers em src/presentation/controllers/inventory/
-# Para cada rota REST
-```
-
-### 3. Implementar Rotas
-```bash
-# Atualizar src/ports/routes/inventoryRoutes.ts
-# Conectar controllers às rotas
-```
-
-### 4. Adicionar Testes
-```bash
-npm run test
-```
-
-### 5. Deploy
-```bash
-npm run build
-npm start
-```
-
----
-
-## 📁 ARQUIVOS CRIADOS
-
-### Modelos de Domínio
-- `src/domain/inventory/models.ts` - Tipos TypeScript
-- `src/domain/repositories/IUserRepository.ts` - Interface
-- `src/domain/repositories/IOrderRepository.ts` - Interface
-
-### Use Cases
-- `src/usercase/order/IUseCase.ts` - Interface genérica
-- `src/usercase/order/CreateOrder.ts` - Caso de uso
-- `src/usercase/order/GetAllOrder.ts` - Caso de uso
-
-### Rotas
-- `src/ports/routes/inventoryRoutes.ts` - Router Express
-
-### Controllers
-- `src/presentation/controllers/orders/CreateOrderController.ts`
-- `src/presentation/controllers/orders/GetAllOrderController.ts`
-
-### Documentação
-- `INVENTORY_FINAL_GUIDE.md` - Guia Completo
-- `INVENTORY_QUICK_START.md` - Quick Start
-- `INVENTORY_SYSTEM_GUIDE.md` - Técnico
-- `INVENTORY_API_EXAMPLES.sh` - Exemplos de API
-
----
-
-## 💾 BANCO DE DADOS
-
-Tabelas necessárias no Prisma schema:
-
-```prisma
-model Category {
-  id        String   @id @default(cuid())
-  userId    String
-  name      String
-  description String?
-  createdAt DateTime @default(now())
+POST /api/messaging/instance
+{
+  "channel": "whatsapp_evolution",
+  "channelInstanceId": "minha-loja",
+  "channelPhoneOrId": "5511999999999"
 }
+```
 
-model Product {
-  id        String   @id @default(cuid())
-  userId    String
-  categoryId String
-  name      String
-  sku       String   @unique
-  price     Float
-  cost      Float?
-  quantity  Int
-  minQuantity Int?
-  type      String   // PHYSICAL, DIGITAL, SERVICE
-  images    Json?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+**Response:**
+```json
+{
+  "instanceId": "uuid",
+  "status": "connecting",
+  "qrCode": "data:image/png;base64,...",
+  "message": "Instância criada. Escaneie o QR Code."
 }
+```
 
-model StockEntry {
-  id          String   @id @default(cuid())
-  userId      String
-  productId   String
-  quantity    Int
-  type        String   // ENTRY, EXIT, ADJUSTMENT
-  description String?
-  reference   String?
-  createdAt   DateTime @default(now())
+### Passo 2: QR Code Expira? Renove!
+```bash
+GET /api/messaging/instance/{uuid}/qrcode
+```
+
+**Response:**
+```json
+{
+  "qrCode": "data:image/png;base64,...",
+  "status": "connecting",
+  "message": "QR Code gerado. Escaneie em 60s."
 }
+```
 
-model Quote {
-  id          String   @id @default(cuid())
-  userId      String
-  quoteNumber String   @unique
-  clientName  String
-  clientEmail String?
-  clientPhone String?
-  items       Json
-  subtotal    Float
-  discount    Float?
-  tax         Float?
-  total       Float
-  status      String   // DRAFT, SENT, ACCEPTED, REJECTED
-  validUntil  DateTime?
-  notes       String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-}
+### Passo 3: Escanear QR Code
+- Abra WhatsApp no celular
+- Aparelhos conectados → Conectar aparelho
+- Escaneie o QR Code
 
-model Order {
-  id            String   @id @default(cuid())
-  userId        String
-  orderNumber   String   @unique
-  clientName    String
-  clientEmail   String?
-  clientPhone   String?
-  address       String?
-  items         Json
-  subtotal      Float
-  discount      Float?
-  tax           Float?
-  total         Float
-  status        String   // DRAFT, CONFIRMED, PROCESSING, SHIPPED, DELIVERED, CANCELLED
-  quoteId       String?
-  trackingNumber String?
-  notes         String?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+### Passo 4: Status Atualiza Automaticamente! ✅
+
+**Via webhook:**
+```
+Evolution → connection.update → status = "connected"
+```
+
+**OU via mensagem:**
+```
+Enviar/receber mensagem → status = "connected"
+```
+
+### Passo 5: Verificar Status
+```bash
+GET /api/messaging/instances
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "uuid",
+      "channelInstanceId": "minha-loja",
+      "status": "connected",  ← ATUALIZADO!
+      "lastConnectedAt": "2025-12-17T11:50:00Z"
+    }
+  ]
 }
 ```
 
 ---
 
-## 🔧 PRÓXIMA AÇÃO
+## 📊 Estados da Instância
 
-Comande estas linhas para começar:
+| Status | Descrição | Ações Possíveis |
+|--------|-----------|-----------------|
+| `pending` | Criada, aguardando conexão | Chamar /qrcode |
+| `connecting` | QR Code gerado, aguardando scan | Escanear QR Code |
+| `connected` | ✅ Conectada e funcionando | Enviar mensagens |
+| `disconnected` | ❌ Desconectada | Reconectar (gera novo QR) |
+| `error` | ⚠️ Erro na conexão | Verificar logs |
 
-```bash
-# 1. Ler a documentação
-cat INVENTORY_FINAL_GUIDE.md
+---
 
-# 2. Criar migrations (se não tiver as tabelas)
-npx prisma migrate dev --name inventory
+## 🔧 Configurações
 
-# 3. Iniciar servidor
-npm run dev
+### Variáveis de Ambiente
+```env
+# .env
+APP_DOMAIN=https://stackline-api.stackline.com.br
+DATABASE_URL=mysql://user:pass@host:port/db
+PORT=3000
+```
 
-# 4. Testar endpoints (ver INVENTORY_API_EXAMPLES.sh)
-curl http://localhost:3000/inventory/health
+### Credenciais Evolution API
+```sql
+INSERT INTO integration_credentials (
+  id, name, type, credentials, isActive
+) VALUES (
+  UUID(),
+  'Evolution API Principal',
+  'whatsapp_evolution',
+  '{"apiKey": "sua-chave", "baseUrl": "http://localhost:8080"}',
+  1
+);
 ```
 
 ---
 
-## 📚 ARQUIVOS IMPORTANTES
+## 🚀 Como Usar no Frontend
 
-| Arquivo | Descrição |
-|---------|-----------|
-| `INVENTORY_FINAL_GUIDE.md` | Guia completo - **COMECE AQUI** |
-| `INVENTORY_QUICK_START.md` | Para começar rápido |
-| `INVENTORY_SYSTEM_GUIDE.md` | Detalhes técnicos |
-| `INVENTORY_API_EXAMPLES.sh` | Exemplos de curl |
-| `src/domain/inventory/models.ts` | Modelos TypeScript |
+### React Component Example:
+```jsx
+function WhatsAppConnect() {
+  const [instance, setInstance] = useState(null);
+  const [qrCode, setQrCode] = useState(null);
+
+  // 1. Criar instância
+  const connect = async () => {
+    const res = await fetch('/api/messaging/instance', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        channel: 'whatsapp_evolution',
+        channelInstanceId: 'my-store',
+        channelPhoneOrId: '5511999999999'
+      })
+    });
+    const data = await res.json();
+    setInstance(data.data);
+    setQrCode(data.data.qrCode);
+  };
+
+  // 2. Renovar QR Code
+  const refreshQR = async () => {
+    const res = await fetch(
+      `/api/messaging/instance/${instance.instanceId}/qrcode`,
+      { headers: { 'Authorization': `Bearer ${token}` } }
+    );
+    const data = await res.json();
+    setQrCode(data.data.qrCode);
+  };
+
+  // 3. Auto-refresh a cada 50s
+  useEffect(() => {
+    if (instance?.status === 'connecting') {
+      const interval = setInterval(refreshQR, 50000);
+      return () => clearInterval(interval);
+    }
+  }, [instance]);
+
+  return (
+    <div>
+      <h2>Conectar WhatsApp</h2>
+      
+      {!instance && (
+        <button onClick={connect}>Conectar</button>
+      )}
+      
+      {instance?.status === 'connecting' && qrCode && (
+        <div>
+          <img src={qrCode} alt="QR Code" />
+          <button onClick={refreshQR}>🔄 Renovar QR</button>
+          <p>Expira em 60 segundos</p>
+        </div>
+      )}
+      
+      {instance?.status === 'connected' && (
+        <div>
+          <p>✅ Conectado!</p>
+          <p>Última conexão: {instance.lastConnectedAt}</p>
+        </div>
+      )}
+    </div>
+  );
+}
+```
 
 ---
 
-## ✨ RESUMO
+## 📝 Logs para Debug
 
-- ✅ **Sem erros de compilação**
-- ✅ **Estrutura clean architecture**
-- ✅ **Multi-tenant pronto**
-- ✅ **Totalmente documentado**
-- ✅ **Pronto para expandir**
+```bash
+# Ver webhooks recebidos
+tail -f logs/app.log | grep Webhook
 
-**Você tem uma base sólida para implementar todo o sistema de estoque!**
+# Ver auto-conexões
+tail -f logs/app.log | grep "Auto-conectando"
+
+# Ver status de conexão
+tail -f logs/app.log | grep "connection.update"
+```
 
 ---
 
-**Status**: ✅ Compilando com sucesso  
-**Erros**: 0  
-**Avisos**: 0  
-**Data**: 12/12/2025
+## ✅ Checklist Final
+
+- [x] Criação de instâncias
+- [x] QR Code fresco sob demanda
+- [x] Webhook automático configurado
+- [x] Status atualiza via webhook
+- [x] Status atualiza via mensagens
+- [x] Status atualiza na criação
+- [x] Túnel Cloudflare funcionando
+- [x] APP_DOMAIN configurado
+- [x] Campo qrCode removido do banco
+- [x] Documentação completa
+
+---
+
+## 🎊 Status: 100% FUNCIONAL!
+
+**Tudo pronto para produção!** 🚀
+
+### Arquivos de Documentação:
+- `SISTEMA_PRONTO.md` - Este arquivo (resumo geral)
+- `QRCODE_FRESH_GUIDE.md` - QR Code sob demanda
+- `WEBHOOK_EVENTS_GUIDE.md` - Eventos processados
+- `INSTANCE_STATUS_AUTO_UPDATE.md` - Auto-atualização
+- `TUNNEL_READY.md` - Túnel Cloudflare
+- `RESUMO_CONFIGURACOES.md` - Todas as configs
+
+### Próximas Melhorias Sugeridas:
+- [ ] Salvar mensagens recebidas em `messaging_messages`
+- [ ] Atualizar status de mensagens enviadas
+- [ ] Notificação WebSocket quando conectar
+- [ ] Dashboard de monitoramento de instâncias
+- [ ] Relatórios de mensagens enviadas/recebidas

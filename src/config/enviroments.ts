@@ -8,4 +8,5 @@ export const ENV = {
     REPO_TYPE: process.env.REPO_TYPE || 'memory',
     JWT_SECRET: process.env.JWT_SECRET || 'changeme',
     JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN || '24h',
+    APP_DOMAIN: process.env.APP_DOMAIN || 'http://localhost:3000',
 };

@@ -81,11 +81,11 @@ model integration_credentials {
 model messaging_instances {
   id                 String               @id
   userId             String
+  name               String?              
   channel            ChannelType
   channelInstanceId  String
   channelPhoneOrId   String
   status             String               @default("pending")
-  qrCode             String?              @db.LongText
   metadata           String?              @db.LongText
   credentialId       String?
   lastConnectedAt    DateTime?

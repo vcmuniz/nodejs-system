@@ -12,11 +12,11 @@ export class PrismaMessagingRepository implements IMessagingRepository {
       data: {
         id: data.id,
         userId: data.userId,
+        name: data.name,
         channel: data.channel as any,
         channelInstanceId: data.channelInstanceId,
         channelPhoneOrId: data.channelPhoneOrId,
         status: data.status,
-        qrCode: data.qrCode,
         metadata: JSON.stringify(data.metadata || {}),
         credentialId: data.credentialId,
         createdAt: data.createdAt,
@@ -27,11 +27,11 @@ export class PrismaMessagingRepository implements IMessagingRepository {
     return {
       id: instance.id,
       userId: instance.userId,
+      name: instance.name || undefined,
       channel: instance.channel as MessagingChannel,
       channelInstanceId: instance.channelInstanceId,
       channelPhoneOrId: instance.channelPhoneOrId,
       status: instance.status as ConnectionStatus,
-      qrCode: instance.qrCode || undefined,
       metadata: instance.metadata ? JSON.parse(instance.metadata as string) : {},
       credentialId: instance.credentialId || undefined,
       createdAt: instance.createdAt,
@@ -74,9 +74,27 @@ export class PrismaMessagingRepository implements IMessagingRepository {
   async getInstanceByChannelId(channelInstanceId: string, channel: MessagingChannel): Promise<MessagingInstanceData | null> {
     const instance = await this.prisma.messaging_instances.findFirst({
       where: { channelInstanceId, channel: channel as any },
+      include: {
+        credential: true, // Incluir credenciais
+      },
     });
 
-    return instance ? this.mapToMessagingInstanceData(instance) : null;
+    if (!instance) return null;
+
+    // Parse credentials from integration_credentials
+    let credentials = {};
+    if (instance.credential && instance.credential.credentials) {
+      try {
+        credentials = JSON.parse(instance.credential.credentials as string);
+      } catch (e) {
+        console.error('[PrismaMessagingRepository] Erro ao parsear credenciais:', e);
+      }
+    }
+
+    return {
+      ...this.mapToMessagingInstanceData(instance),
+      credentials, // Adicionar credenciais parseadas
+    };
   }
 
   async updateInstanceStatus(instanceId: string, status: ConnectionStatus): Promise<void> {
@@ -87,13 +105,6 @@ export class PrismaMessagingRepository implements IMessagingRepository {
         ...(status === ConnectionStatus.CONNECTED && { lastConnectedAt: new Date() }),
         ...(status === ConnectionStatus.DISCONNECTED && { lastDisconnectedAt: new Date() }),
       },
-    });
-  }
-
-  async updateInstanceQrCode(instanceId: string, qrCode: string): Promise<void> {
-    await this.prisma.messaging_instances.update({
-      where: { id: instanceId },
-      data: { qrCode },
     });
   }
 
@@ -247,11 +258,11 @@ export class PrismaMessagingRepository implements IMessagingRepository {
     return {
       id: instance.id,
       userId: instance.userId,
+      name: instance.name || undefined,
       channel: instance.channel as MessagingChannel,
       channelInstanceId: instance.channelInstanceId,
       channelPhoneOrId: instance.channelPhoneOrId,
       status: instance.status as ConnectionStatus,
-      qrCode: instance.qrCode || undefined,
       metadata: instance.metadata ? JSON.parse(instance.metadata as string) : {},
       credentialId: instance.credentialId || undefined,
       createdAt: instance.createdAt,

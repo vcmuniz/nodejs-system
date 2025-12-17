@@ -19,6 +19,7 @@ export class EvolutionAPIImpl implements IEvolutionAPI {
   private client: AxiosInstance;
 
   constructor(apiKey: string, baseURL: string) {
+    console.log(`[EvolutionAPIImpl] Criando cliente com baseURL: ${baseURL}, apiKey: ${apiKey.substring(0, 10)}...`);
     this.client = axios.create({
       baseURL,
       headers: {

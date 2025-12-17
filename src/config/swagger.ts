@@ -114,10 +114,6 @@ const options = {
               enum: ['active', 'inactive', 'disconnected'],
               example: 'active',
             },
-            qrCode: {
-              type: 'string',
-              example: 'data:image/png;base64,...',
-            },
             createdAt: {
               type: 'string',
               format: 'date-time',
@@ -180,6 +176,11 @@ const options = {
               type: 'string',
               example: 'user123',
             },
+            name: {
+              type: 'string',
+              example: 'Loja Principal',
+              description: 'Nome amigável para identificar a instância',
+            },
             channel: {
               $ref: '#/components/schemas/MessagingChannel',
             },
@@ -200,8 +201,8 @@ const options = {
             },
             qrCode: {
               type: 'string',
-              example: 'data:image/png;base64,...',
-              description: 'QR code for channels that require it (e.g., WhatsApp)',
+              example: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA...',
+              description: 'QR code in base64 format (when available)',
             },
             metadata: {
               type: 'object',

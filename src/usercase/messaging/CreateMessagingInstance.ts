@@ -9,6 +9,7 @@ import { GetActiveCredentialByType } from '../integration-credentials/GetActiveC
 
 export interface CreateMessagingInstanceInput {
   userId: string;
+  name?: string; // Nome amigável (ex: "Loja Principal", "Atendimento")
   channel: MessagingChannel;
   channelInstanceId: string; // Nome único no canal (ex: nome da instância)
   channelPhoneOrId: string; // Telefone ou ID no canal
@@ -94,6 +95,7 @@ export class CreateMessagingInstance {
       instance = await this.messagingRepository.saveInstance({
         id: randomUUID(),
         userId: input.userId,
+        name: input.name, // Nome amigável fornecido pelo usuário
         channel: input.channel,
         channelInstanceId: input.channelInstanceId,
         channelPhoneOrId: input.channelPhoneOrId,
@@ -122,14 +124,36 @@ export class CreateMessagingInstance {
     // 7. Atualizar status da instância
     await this.messagingRepository.updateInstanceStatus(instance.id, connectResult.status);
 
-    if (connectResult.qrCode) {
-      await this.messagingRepository.updateInstanceQrCode(instance.id, connectResult.qrCode);
+    // 8. Se não retornou QR Code, verificar status real (pode já estar conectada)
+    if (!connectResult.qrCode && connectResult.status === ConnectionStatus.CONNECTING) {
+      try {
+        const statusResult = await adapter.getStatus({
+          channelInstanceId: input.channelInstanceId,
+        });
+        
+        // Atualizar com status real
+        if (statusResult.status !== connectResult.status) {
+          await this.messagingRepository.updateInstanceStatus(instance.id, statusResult.status);
+          console.log(`[CreateMessagingInstance] Status atualizado para: ${statusResult.status}`);
+        }
+        
+        return {
+          instanceId: instance.id,
+          status: statusResult.status,
+          qrCode: statusResult.qrCode,
+          message: statusResult.isReady 
+            ? '✅ Instância já está conectada!' 
+            : connectResult.message || (isNewInstance ? 'Instância criada' : 'Instância já existente'),
+        };
+      } catch (error) {
+        console.warn('[CreateMessagingInstance] Erro ao verificar status:', error);
+      }
     }
 
     return {
       instanceId: instance.id,
       status: connectResult.status,
-      qrCode: connectResult.qrCode,
+      qrCode: connectResult.qrCode, // QR Code vem do adapter (não salvo no banco)
       message: connectResult.message || (isNewInstance ? 'Instância criada' : 'Instância já existente'),
     };
   }

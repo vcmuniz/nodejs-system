@@ -1,0 +1,7 @@
+tunnel: b345d038-ceb1-4990-8794-d09b44142513
+credentials-file: /home/victo/.cloudflared/b345d038-ceb1-4990-8794-d09b44142513.json
+
+ingress:
+  - hostname: stackline-api.stackline.com.br
+    service: http://127.0.0.1:3000
+  - service: http_status:404

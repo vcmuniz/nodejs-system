@@ -60,7 +60,7 @@ export class WhatsAppAdapter implements IMessagingAdapter {
       
       return {
         status: ConnectionStatus.CONNECTING,
-        qrCode: connectResponse.base64, // QR Code vem direto na raiz da resposta
+        qrCode: connectResponse.base64, // QR Code em base64
         message: needsCreate 
           ? 'Instância criada. Escaneie o QR Code no WhatsApp.' 
           : 'Instância já existente. Escaneie o QR Code.',
@@ -90,8 +90,39 @@ export class WhatsAppAdapter implements IMessagingAdapter {
     }
   }
 
-  async getStatus(): Promise<any> {
-    return { status: ConnectionStatus.CONNECTED, isReady: true };
+  async getStatus(input: { channelInstanceId: string }): Promise<any> {
+    try {
+      // Buscar status da instância na Evolution API
+      const response = await this.evolutionAPI.getInstance(input.channelInstanceId);
+      const instance = response.instance;
+      
+      // Se não estiver conectada, tentar obter QR Code fresco
+      if (instance.status !== 'open') {
+        try {
+          const connectResponse = await this.evolutionAPI.connectInstance(input.channelInstanceId);
+          return {
+            status: ConnectionStatus.CONNECTING,
+            qrCode: connectResponse.base64,
+            isReady: false,
+            message: 'QR Code gerado. Escaneie para conectar.',
+          };
+        } catch (error) {
+          console.warn('[WhatsAppAdapter] Erro ao gerar QR Code:', error);
+        }
+      }
+      
+      return {
+        status: instance.status === 'open' ? ConnectionStatus.CONNECTED : ConnectionStatus.DISCONNECTED,
+        isReady: instance.status === 'open',
+        message: instance.status === 'open' ? 'Conectado' : 'Desconectado',
+      };
+    } catch (error: any) {
+      return {
+        status: ConnectionStatus.ERROR,
+        isReady: false,
+        message: error.message || 'Erro ao obter status',
+      };
+    }
   }
 
   async handleWebhook(body: any): Promise<any> {

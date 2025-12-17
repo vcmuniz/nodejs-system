@@ -3,7 +3,10 @@ import { Router } from 'express';
 import { makeSendMessageController } from '../controllers/messaging/SendMessageController';
 import { makeCreateMessagingInstanceController } from '../controllers/messaging/CreateMessagingInstanceController';
 import { makeListMessagingInstancesController } from '../controllers/messaging/ListMessagingInstancesController';
+import { makeGetInstanceQRCodeController } from '../controllers/messaging/GetInstanceQRCodeController';
 import { makeAuthMiddleware } from '../factories/middlewares/makeAuthMiddleware';
+import { ProcessMessagingWebhook } from '../../usercase/messaging/ProcessMessagingWebhook';
+import { makeMessagingRepository } from '../../infra/database/factories/makeMessagingRepository';
 
 /**
  * @swagger
@@ -57,6 +60,10 @@ import { makeAuthMiddleware } from '../factories/middlewares/makeAuthMiddleware'
  *                       userId:
  *                         type: string
  *                         example: 'user-123'
+ *                       name:
+ *                         type: string
+ *                         example: 'Loja Principal'
+ *                         description: Nome amigável da instância (opcional)
  *                       channel:
  *                         type: string
  *                         example: 'whatsapp_evolution'
@@ -82,7 +89,7 @@ import { makeAuthMiddleware } from '../factories/middlewares/makeAuthMiddleware'
  *                       updatedAt:
  *                         type: string
  *                         format: date-time
- *                     description: Instance data (qrCode and credentials omitted for performance/security)
+ *                     description: Instance data (credentials omitted for security)
  *       401:
  *         description: Unauthorized - invalid or missing authentication token
  *       500:
@@ -127,6 +134,10 @@ import { makeAuthMiddleware } from '../factories/middlewares/makeAuthMiddleware'
  *           schema:
  *             type: object
  *             properties:
+ *               name:
+ *                 type: string
+ *                 description: Nome amigável para identificar a instância (opcional)
+ *                 example: 'Loja Principal'
  *               channel:
  *                 $ref: '#/components/schemas/MessagingChannel'
  *               channelInstanceId:
@@ -202,11 +213,11 @@ import { makeAuthMiddleware } from '../factories/middlewares/makeAuthMiddleware'
  *                       example: 'connecting'
  *                     qrCode:
  *                       type: string
- *                       example: 'data:image/png;base64,...'
- *                       description: QR code for channels that require it (e.g., WhatsApp)
+ *                       example: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA...'
+ *                       description: QR Code em base64 (quando disponível)
  *                     message:
  *                       type: string
- *                       example: 'Escaneie o QR code'
+ *                       example: 'Instância criada. Escaneie o QR Code no WhatsApp.'
  *       400:
  *         description: Bad request - missing required fields or invalid data
  *       401:
@@ -326,6 +337,55 @@ export const makeMessagingRoutes = () => {
 
   /**
    * @swagger
+   * /api/messaging/instance/{instanceId}/qrcode:
+   *   get:
+   *     tags:
+   *       - Messaging (Multi-Channel)
+   *     summary: Get fresh QR Code for an instance
+   *     description: |
+   *       Generates a fresh QR Code for WhatsApp connection.
+   *       QR Codes expire in 30-60 seconds, use this endpoint to get a new one.
+   *     security:
+   *       - bearerAuth: []
+   *     parameters:
+   *       - in: path
+   *         name: instanceId
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: Instance ID (UUID)
+   *     responses:
+   *       200:
+   *         description: QR Code generated successfully
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 success:
+   *                   type: boolean
+   *                   example: true
+   *                 data:
+   *                   type: object
+   *                   properties:
+   *                     qrCode:
+   *                       type: string
+   *                       example: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA...'
+   *                     status:
+   *                       type: string
+   *                       example: 'connecting'
+   *                     message:
+   *                       type: string
+   *                       example: 'QR Code gerado com sucesso. Escaneie em até 60 segundos.'
+   */
+  router.get(
+    '/instance/:instanceId/qrcode',
+    authMiddleware.authenticate(),
+    (req, res) => makeGetInstanceQRCodeController().handle(req, res)
+  );
+
+  /**
+   * @swagger
    * /api/messaging/webhook/{instanceId}:
    *   post:
    *     tags:
@@ -409,15 +469,29 @@ export const makeMessagingRoutes = () => {
    */
   router.post(
     '/webhook/:instanceId',
-    (req, res) => {
-      console.log(`[Webhook] Recebido para instância: ${req.params.instanceId}`);
-      console.log(`[Webhook] Event:`, req.body.event);
-      console.log(`[Webhook] Data keys:`, Object.keys(req.body.data || {}));
-      
-      // TODO: Processar webhook e atualizar status/mensagens no banco
-      // Por enquanto apenas loga para debug
-      
-      res.json({ success: true, message: 'Webhook recebido' });
+    async (req, res) => {
+      try {
+        const { instanceId } = req.params;
+        const { event, data } = req.body;
+
+        console.log(`[Webhook] Recebido para instância: ${instanceId}`);
+        console.log(`[Webhook] Event: ${event}`);
+        console.log(`[Webhook] Data keys:`, Object.keys(data || {}));
+        
+        // Processar webhook de forma assíncrona
+        const repository = makeMessagingRepository();
+        const useCase = new ProcessMessagingWebhook(repository);
+        
+        // Não aguarda para responder rápido à Evolution API
+        useCase.execute({ instanceId, event, data }).catch((error) => {
+          console.error('[Webhook] Erro ao processar:', error);
+        });
+        
+        res.json({ success: true, message: 'Webhook recebido' });
+      } catch (error: any) {
+        console.error('[Webhook] Erro:', error);
+        res.status(500).json({ success: false, error: error.message });
+      }
     }
   );
 
