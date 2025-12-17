@@ -35,11 +35,13 @@ export class WhatsAppAdapter implements IMessagingAdapter {
         }
       }
       
-      // Conectar para gerar QR Code
-      console.log(`[WhatsAppAdapter] Conectando para gerar QR Code: ${params.channelInstanceId}`);
+      // Conectar para gerar QR Code FRESCO
+      // Sempre chama connect para pegar o QR Code mais recente da Evolution
+      console.log(`[WhatsAppAdapter] Conectando para gerar QR Code FRESCO: ${params.channelInstanceId}`);
       const connectResponse = await this.evolutionAPI.connectInstance(params.channelInstanceId);
       
-      console.log(`[WhatsAppAdapter] QR Code recebido:`, connectResponse.base64 ? 'SIM' : 'NÃO');
+      console.log(`[WhatsAppAdapter] QR Code recebido:`, connectResponse.base64 ? `SIM (${connectResponse.base64.length} chars)` : 'NÃO');
+      console.log(`[WhatsAppAdapter] Code (primeiros 30 chars):`, connectResponse.code ? `${connectResponse.code.substring(0, 30)}...` : 'N/A');
       
       // Configurar webhook automaticamente se URL foi fornecida
       if (params.webhookBaseUrl) {
