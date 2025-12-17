@@ -93,9 +93,39 @@ export class SyncGroupsController {
         return res.status(403).json({ error: 'Acesso negado' });
       }
 
-      // Busca grupos na Evolution API
-      const evolutionUrl = ENV.EVOLUTION_API_URL || 'http://localhost:8080';
-      const apiKey = ENV.EVOLUTION_API_KEY || '';
+      // Busca credenciais da instância
+      let evolutionUrl = 'http://localhost:8080';
+      let apiKey = '';
+
+      if (instance.credentialId) {
+        // Busca as credenciais do banco
+        const prisma = (await import('../../../infra/database/prisma')).default;
+        const credential = await prisma.integration_credentials.findUnique({
+          where: { id: instance.credentialId }
+        });
+
+        if (credential && credential.credentials) {
+          const creds = typeof credential.credentials === 'string' 
+            ? JSON.parse(credential.credentials) 
+            : credential.credentials;
+          
+          evolutionUrl = creds.baseUrl || creds.apiUrl || 'http://localhost:8080';
+          apiKey = creds.apiKey || creds.apikey || '';
+        }
+      }
+
+      // Se não tem credenciais, usa as do .env (fallback)
+      if (!apiKey) {
+        evolutionUrl = ENV.EVOLUTION_API_URL || 'http://localhost:8080';
+        apiKey = ENV.EVOLUTION_API_KEY || '';
+      }
+
+      if (!apiKey) {
+        return res.status(400).json({ 
+          error: 'API Key não configurada',
+          details: 'Configure as credenciais da Evolution API no sistema'
+        });
+      }
 
       let groups: any[] = [];
       
