@@ -17,6 +17,7 @@ export interface SendMessageOutput {
 export interface ConnectInput {
   channelInstanceId: string;
   credentials?: Record<string, any>;
+  needsCreate?: boolean; // Se true, tenta criar instância antes de conectar
 }
 
 export interface ConnectOutput {

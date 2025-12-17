@@ -2,6 +2,7 @@
 import { IMessagingRepository } from '../../ports/IMessagingRepository';
 import { MessagingAdapterFactory } from '../../infra/messaging/MessagingAdapterFactory';
 import { MessagingChannel, ConnectionStatus } from '../../domain/messaging/MessagingChannel';
+import { MessagingInstanceData } from '../../domain/messaging/MessagingInstance';
 import { randomUUID } from 'crypto';
 import { makeIntegrationCredentialRepository } from '../../infra/database/factories/makeIntegrationCredentialRepository';
 import { GetActiveCredentialByType } from '../integration-credentials/GetActiveCredentialByType';
@@ -35,7 +36,7 @@ export class CreateMessagingInstance {
       input.channel
     );
 
-    let instance: MessagingInstanceData;
+    let instance: MessagingInstanceData | null = null;
     let isNewInstance = false;
 
     if (existing && existing.userId === input.userId) {
@@ -74,7 +75,7 @@ export class CreateMessagingInstance {
     // 4. Verificar se a instância existe na Evolution API
     let needsCreate = isNewInstance;
     
-    if (!isNewInstance) {
+    if (!isNewInstance && instance) {
       // Verificar na Evolution API se a instância realmente existe
       try {
         console.log(`[CreateMessagingInstance] Verificando instância na Evolution API: ${input.channelInstanceId}`);
@@ -102,6 +103,11 @@ export class CreateMessagingInstance {
         createdAt: new Date(),
         updatedAt: new Date(),
       });
+    }
+
+    // Garantir que instance não é null
+    if (!instance) {
+      throw new Error('Erro ao criar/obter instância');
     }
 
     // 6. Conectar através do adaptador
