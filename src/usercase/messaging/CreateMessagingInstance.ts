@@ -14,6 +14,7 @@ export interface CreateMessagingInstanceInput {
   channelPhoneOrId: string; // Telefone ou ID no canal
   credentials?: Record<string, any>; // Opcional: passar credenciais manualmente
   credentialId?: string; // Opcional: forçar credencial específica
+  webhookBaseUrl?: string; // URL base para configurar webhook automaticamente
 }
 
 export interface CreateMessagingInstanceOutput {
@@ -115,6 +116,7 @@ export class CreateMessagingInstance {
       channelInstanceId: input.channelInstanceId,
       credentials,
       needsCreate, // Informa se precisa criar ou apenas conectar
+      webhookBaseUrl: input.webhookBaseUrl, // URL base para webhook
     });
 
     // 7. Atualizar status da instância

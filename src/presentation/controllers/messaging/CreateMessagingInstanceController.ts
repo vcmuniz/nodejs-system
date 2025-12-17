@@ -20,6 +20,13 @@ export class CreateMessagingInstanceController {
         });
       }
 
+      // Construir URL base automaticamente a partir do request
+      const protocol = req.protocol; // http ou https
+      const host = req.get('host'); // localhost:3000 ou api.seuapp.com
+      const webhookBaseUrl = `${protocol}://${host}`;
+
+      console.log(`[CreateMessagingInstanceController] Webhook base URL: ${webhookBaseUrl}`);
+
       const useCase = makeCreateMessagingInstanceUseCase();
       const result = await useCase.execute({
         userId,
@@ -28,6 +35,7 @@ export class CreateMessagingInstanceController {
         channelPhoneOrId,
         credentials, // Agora opcional - se não passar, busca automaticamente
         credentialId, // Opcional - forçar credencial específica
+        webhookBaseUrl, // URL base para configurar webhook
       });
 
       return res.status(201).json({

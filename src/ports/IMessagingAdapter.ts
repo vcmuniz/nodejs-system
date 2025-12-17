@@ -18,6 +18,7 @@ export interface ConnectInput {
   channelInstanceId: string;
   credentials?: Record<string, any>;
   needsCreate?: boolean; // Se true, tenta criar instância antes de conectar
+  webhookBaseUrl?: string; // URL base para configurar webhook (ex: https://api.com)
 }
 
 export interface ConnectOutput {
