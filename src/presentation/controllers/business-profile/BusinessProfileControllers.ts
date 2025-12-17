@@ -2,6 +2,7 @@ import { Response } from "express";
 import { IController } from "../IController";
 import { ListUserBusinessProfiles } from "../../../usercase/business-profile/ListUserBusinessProfiles";
 import { SelectBusinessProfile } from "../../../usercase/business-profile/SelectBusinessProfile";
+import { CreateBusinessProfile } from "../../../usercase/business-profile/CreateBusinessProfile";
 import { AuthenticatedRequest } from "../../interfaces/AuthenticatedRequest";
 
 export class ListBusinessProfilesController implements IController {
@@ -136,6 +137,82 @@ export class SwitchBusinessProfileController implements IController {
       res.status(400).json({
         success: false,
         message: error.message || 'Erro ao trocar organização'
+      });
+    }
+  }
+}
+
+export class CreateBusinessProfileController implements IController {
+  constructor(private createBusinessProfile: CreateBusinessProfile) {}
+
+  async handle(req: AuthenticatedRequest, res: Response): Promise<void> {
+    try {
+      const userId = req.user?.id;
+      const email = req.user?.email;
+      
+      if (!userId || !email) {
+        res.status(401).json({ success: false, message: 'Não autorizado' });
+        return;
+      }
+
+      const { 
+        companyName, 
+        tradingName, 
+        cnpj, 
+        whatsapp,
+        cep,
+        street,
+        number,
+        complement,
+        neighborhood,
+        city,
+        state,
+        description,
+        instagram,
+        facebook,
+        website
+      } = req.body;
+
+      if (!companyName) {
+        res.status(400).json({ 
+          success: false, 
+          message: 'companyName é obrigatório' 
+        });
+        return;
+      }
+
+      const result = await this.createBusinessProfile.execute({
+        userId,
+        email,
+        name: req.user?.name,
+        role: req.user?.role,
+        companyName,
+        tradingName,
+        cnpj,
+        whatsapp,
+        cep,
+        street,
+        number,
+        complement,
+        neighborhood,
+        city,
+        state,
+        description,
+        instagram,
+        facebook,
+        website
+      });
+
+      res.status(201).json({
+        success: true,
+        message: 'Organização criada com sucesso',
+        token: result.token,
+        businessProfile: result.businessProfile
+      });
+    } catch (error: any) {
+      res.status(400).json({
+        success: false,
+        message: error.message || 'Erro ao criar organização'
       });
     }
   }

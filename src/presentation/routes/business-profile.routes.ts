@@ -5,10 +5,12 @@ import { requireNoBusinessProfile } from "../../middlewares/requireNoBusinessPro
 import JsonWebTokenProvider from "../../infra/auth/JsonWebTokenProvider";
 import { ListUserBusinessProfiles } from "../../usercase/business-profile/ListUserBusinessProfiles";
 import { SelectBusinessProfile } from "../../usercase/business-profile/SelectBusinessProfile";
+import { CreateBusinessProfile } from "../../usercase/business-profile/CreateBusinessProfile";
 import { 
   ListBusinessProfilesController,
   SelectBusinessProfileController,
-  SwitchBusinessProfileController
+  SwitchBusinessProfileController,
+  CreateBusinessProfileController
 } from "../controllers/business-profile/BusinessProfileControllers";
 
 export const makeBusinessProfileRoutes = (prisma: PrismaClient) => {
@@ -19,11 +21,13 @@ export const makeBusinessProfileRoutes = (prisma: PrismaClient) => {
   // Use cases
   const listUserBusinessProfiles = new ListUserBusinessProfiles(prisma);
   const selectBusinessProfile = new SelectBusinessProfile(prisma, tokenProvider);
+  const createBusinessProfile = new CreateBusinessProfile(prisma, tokenProvider);
 
   // Controllers
   const listController = new ListBusinessProfilesController(listUserBusinessProfiles);
   const selectController = new SelectBusinessProfileController(selectBusinessProfile);
   const switchController = new SwitchBusinessProfileController(selectBusinessProfile);
+  const createController = new CreateBusinessProfileController(createBusinessProfile);
 
   // Routes - SOMENTE para quem NÃO tem businessProfileId no token
   router.get(
@@ -31,6 +35,13 @@ export const makeBusinessProfileRoutes = (prisma: PrismaClient) => {
     authMiddleware.authenticate.bind(authMiddleware),
     requireNoBusinessProfile,
     listController.handle.bind(listController)
+  );
+
+  router.post(
+    "/create",
+    authMiddleware.authenticate.bind(authMiddleware),
+    requireNoBusinessProfile,
+    createController.handle.bind(createController)
   );
 
   router.post(
