@@ -16,6 +16,7 @@ import { makeAddGroupMemberController } from '../controllers/messaging/groups/Ad
 import { makeRemoveGroupMemberController } from '../controllers/messaging/groups/RemoveGroupMemberController';
 import { makeListGroupMembersController } from '../controllers/messaging/groups/ListGroupMembersController';
 import { makeSendMessageToGroupController } from '../controllers/messaging/groups/SendMessageToGroupController';
+import { makeSyncGroupsController } from '../controllers/messaging/groups/SyncGroupsController';
 
 /**
  * @swagger
@@ -188,6 +189,11 @@ export const makeMessagingRoutes = () => {
   // ENVIO PARA GRUPO
   router.post('/groups/:groupId/send', authMiddleware.authenticate(), requireBusinessProfile, (req, res) =>
     makeSendMessageToGroupController().handle(req, res)
+  );
+
+  // SINCRONIZAÇÃO DE GRUPOS
+  router.post('/groups/sync/:instanceId', authMiddleware.authenticate(), requireBusinessProfile, (req, res) =>
+    makeSyncGroupsController().handle(req, res)
   );
 
   return router;
