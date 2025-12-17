@@ -1,4 +1,8 @@
 const swaggerJsdoc = require('swagger-jsdoc');
+const path = require('path');
+
+// Get project root directory
+const projectRoot = path.join(__dirname, '../..');
 
 const options = {
   definition: {
@@ -463,8 +467,10 @@ const options = {
     },
   },
   apis: [
-    './src/presentation/routes/*.routes.ts',
-    './src/presentation/controllers/**/*.ts',
+    path.join(projectRoot, 'src/presentation/routes/*.routes.ts'),
+    path.join(projectRoot, 'src/presentation/routes/*.routes.js'),
+    path.join(projectRoot, 'src/presentation/controllers/**/*.ts'),
+    path.join(projectRoot, 'src/presentation/controllers/**/*.js'),
   ],
 };
 
