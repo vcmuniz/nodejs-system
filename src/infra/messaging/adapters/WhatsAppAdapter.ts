@@ -39,11 +39,11 @@ export class WhatsAppAdapter implements IMessagingAdapter {
       console.log(`[WhatsAppAdapter] Conectando para gerar QR Code: ${params.channelInstanceId}`);
       const connectResponse = await this.evolutionAPI.connectInstance(params.channelInstanceId);
       
-      console.log(`[WhatsAppAdapter] QR Code gerado com sucesso`);
+      console.log(`[WhatsAppAdapter] QR Code recebido:`, connectResponse.base64 ? 'SIM' : 'NÃO');
       
       return {
         status: ConnectionStatus.CONNECTING,
-        qrCode: connectResponse.qrcode?.base64,
+        qrCode: connectResponse.base64, // QR Code vem direto na raiz da resposta
         message: needsCreate 
           ? 'Instância criada. Escaneie o QR Code no WhatsApp.' 
           : 'Instância já existente. Escaneie o QR Code.',

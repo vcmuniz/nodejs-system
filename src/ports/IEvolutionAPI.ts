@@ -64,10 +64,10 @@ export interface CreateInstanceResponse {
 }
 
 export interface ConnectInstanceResponse {
-  qrcode: {
-    code: string;
-    base64: string;
-  };
+  pairingCode?: string | null;
+  code: string;
+  base64: string;
+  count?: number;
   message?: string;
 }
 
