@@ -82,9 +82,20 @@ export class SwitchBusinessProfileController implements IController {
     try {
       const userId = req.user?.id;
       const email = req.user?.email;
+      const currentBusinessProfileId = req.user?.businessProfileId;
       
       if (!userId || !email) {
         res.status(401).json({ success: false, message: 'Não autorizado' });
+        return;
+      }
+
+      // Validar se JÁ tem uma organização selecionada
+      if (!currentBusinessProfileId) {
+        res.status(400).json({ 
+          success: false, 
+          message: 'Você precisa selecionar uma organização primeiro. Use /api/business-profiles/select',
+          action: 'USE_SELECT_ENDPOINT'
+        });
         return;
       }
 
@@ -94,6 +105,15 @@ export class SwitchBusinessProfileController implements IController {
         res.status(400).json({ 
           success: false, 
           message: 'businessProfileId é obrigatório' 
+        });
+        return;
+      }
+
+      // Não permitir trocar para a mesma organização
+      if (businessProfileId === currentBusinessProfileId) {
+        res.status(400).json({ 
+          success: false, 
+          message: 'Você já está nesta organização' 
         });
         return;
       }
