@@ -62,12 +62,25 @@ import { makeAuthMiddleware } from '../factories/middlewares/makeAuthMiddleware'
  *     description: |
  *       Create and connect a new messaging instance for any supported channel.
  *       
- *       **Credentials are now OPTIONAL!**
+ *       **🎉 Fully Automatic Features:**
+ *       - ✅ **Credentials are OPTIONAL** - Uses admin-configured credentials automatically
+ *       - ✅ **Webhook is AUTOMATIC** - Configured from request URL (no .env needed!)
+ *       - ✅ **Idempotent** - Calling multiple times doesn't duplicate
+ *       - ✅ **Smart sync** - Auto-detects and recreates if Evolution API lost instance
  *       
- *       If you don't pass credentials, the system will automatically use the credentials 
- *       configured by the administrator for that channel type.
+ *       **Webhook Configuration:**
+ *       The system automatically configures the webhook using the request URL:
+ *       - Request to `http://localhost:3000` → Webhook: `http://localhost:3000/api/messaging/webhook/{instanceId}`
+ *       - Request to `https://api.yourapp.com` → Webhook: `https://api.yourapp.com/api/messaging/webhook/{instanceId}`
+ *       - Works with ngrok, reverse proxies, HTTPS, etc. - **Zero configuration needed!**
  *       
- *       You can also optionally specify a `credentialId` to use a specific credential.
+ *       **How it works:**
+ *       1. System checks if instance exists in database
+ *       2. If exists, verifies if it exists in Evolution API
+ *       3. Creates/recreates only if needed
+ *       4. Connects and generates QR code
+ *       5. Automatically configures webhook from request URL
+ *       6. Returns QR code for scanning
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -105,7 +118,7 @@ import { makeAuthMiddleware } from '../factories/middlewares/makeAuthMiddleware'
  *               - channelPhoneOrId
  *           examples:
  *             withoutCredentials:
- *               summary: Create instance without credentials (uses system defaults)
+ *               summary: Create instance without credentials (RECOMMENDED - uses system defaults + auto webhook)
  *               value:
  *                 channel: whatsapp_evolution
  *                 channelInstanceId: my-store
@@ -280,8 +293,31 @@ export const makeMessagingRoutes = () => {
    *   post:
    *     tags:
    *       - Messaging (Multi-Channel)
-   *     summary: Webhook endpoint for messaging events
-   *     description: Receives events from messaging providers (Evolution API, etc)
+   *     summary: Webhook endpoint for messaging events (Auto-configured)
+   *     description: |
+   *       Receives events from messaging providers (Evolution API, etc).
+   *       
+   *       **🎉 This webhook is AUTOMATICALLY configured when you create an instance!**
+   *       
+   *       **How it works:**
+   *       1. You create instance via `POST /api/messaging/instance`
+   *       2. System automatically configures this webhook URL in Evolution API
+   *       3. Evolution API sends events here (messages, connection status, etc)
+   *       4. No manual configuration needed - works with any URL (localhost, ngrok, production)
+   *       
+   *       **Webhook URL format:**
+   *       - `{YOUR_API_URL}/api/messaging/webhook/{instanceId}`
+   *       - Example: `http://localhost:3000/api/messaging/webhook/my-store`
+   *       - Example: `https://api.yourapp.com/api/messaging/webhook/my-store`
+   *       
+   *       **Events received:**
+   *       - `messages.upsert` - New message received
+   *       - `connection.update` - Connection status changed
+   *       - `qr.updated` - New QR code generated
+   *       - `message.sent` - Message sent successfully
+   *       - `message.ack` - Message delivery status updated
+   *       
+   *       **Note:** This endpoint does NOT require authentication (Evolution API calls it)
    *     parameters:
    *       - in: path
    *         name: instanceId
@@ -289,6 +325,7 @@ export const makeMessagingRoutes = () => {
    *         schema:
    *           type: string
    *         description: Instance identifier
+   *         example: my-store
    *     requestBody:
    *       required: true
    *       content:
@@ -296,6 +333,28 @@ export const makeMessagingRoutes = () => {
    *           schema:
    *             type: object
    *             description: Webhook payload from messaging provider
+   *           examples:
+   *             messageReceived:
+   *               summary: New message received
+   *               value:
+   *                 event: messages.upsert
+   *                 instance: my-store
+   *                 data:
+   *                   key:
+   *                     remoteJid: "5521999999999@s.whatsapp.net"
+   *                     fromMe: false
+   *                     id: "BAE5..."
+   *                   message:
+   *                     conversation: "Hello!"
+   *                   messageTimestamp: "1702828800"
+   *             connectionUpdate:
+   *               summary: Connection status changed
+   *               value:
+   *                 event: connection.update
+   *                 instance: my-store
+   *                 data:
+   *                   state: open
+   *                   statusReason: 200
    *     responses:
    *       200:
    *         description: Webhook received successfully
@@ -309,7 +368,7 @@ export const makeMessagingRoutes = () => {
    *                   example: true
    *                 message:
    *                   type: string
-   *                   example: 'Webhook processado'
+   *                   example: 'Webhook recebido'
    */
   router.post(
     '/webhook/:instanceId',
