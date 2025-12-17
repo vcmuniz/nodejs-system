@@ -10,8 +10,50 @@ export class WhatsAppAdapter implements IMessagingAdapter {
     return MessagingChannel.WHATSAPP_EVOLUTION;
   }
 
-  async connect(): Promise<any> {
-    return { status: ConnectionStatus.CONNECTING, message: 'Conectando...' };
+  async connect(params: { channelInstanceId: string; credentials?: any }): Promise<any> {
+    try {
+      console.log(`[WhatsAppAdapter] Criando instância: ${params.channelInstanceId}`);
+      
+      // 1. Criar a instância na Evolution API
+      const createResponse = await this.evolutionAPI.createInstance({
+        instanceName: params.channelInstanceId,
+        integration: 'WHATSAPP-BAILEYS',
+      });
+      
+      console.log(`[WhatsAppAdapter] Instância criada:`, createResponse);
+      
+      // 2. Conectar para gerar QR Code
+      const connectResponse = await this.evolutionAPI.connectInstance(params.channelInstanceId);
+      
+      console.log(`[WhatsAppAdapter] QR Code gerado:`, connectResponse);
+      
+      return {
+        status: ConnectionStatus.CONNECTING,
+        qrCode: connectResponse.qrcode?.base64,
+        message: 'Instância criada. Escaneie o QR Code no WhatsApp.',
+      };
+    } catch (error: any) {
+      console.error(`[WhatsAppAdapter] Erro ao conectar:`, error);
+      
+      // Se a instância já existe, apenas tenta conectar
+      if (error.message?.includes('já existe') || error.response?.status === 409) {
+        try {
+          const connectResponse = await this.evolutionAPI.connectInstance(params.channelInstanceId);
+          return {
+            status: ConnectionStatus.CONNECTING,
+            qrCode: connectResponse.qrcode?.base64,
+            message: 'Instância já existe. Escaneie o QR Code.',
+          };
+        } catch (connectError) {
+          console.error(`[WhatsAppAdapter] Erro ao reconectar:`, connectError);
+        }
+      }
+      
+      return {
+        status: ConnectionStatus.ERROR,
+        message: error.message || 'Erro ao criar instância',
+      };
+    }
   }
 
   async disconnect(): Promise<void> {}

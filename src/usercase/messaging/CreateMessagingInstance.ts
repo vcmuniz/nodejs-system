@@ -74,8 +74,8 @@ export class CreateMessagingInstance {
       updatedAt: new Date(),
     });
 
-    // 4. Conectar através do adaptador
-    const adapter = this.adapterFactory.createAdapter(input.channel);
+    // 4. Conectar através do adaptador (passando credentials para criar Evolution API com credenciais corretas)
+    const adapter = this.adapterFactory.createAdapter(input.channel, credentials);
     const connectResult = await adapter.connect({
       channelInstanceId: input.channelInstanceId,
       credentials,
