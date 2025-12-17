@@ -10,19 +10,26 @@ export class ListBusinessProfilesController implements IController {
 
   async handle(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
+      console.log('[ListBusinessProfilesController] Iniciando...');
+      console.log('[ListBusinessProfilesController] req.user:', req.user);
+      
       const userId = req.user?.id;
       if (!userId) {
+        console.log('[ListBusinessProfilesController] userId não encontrado');
         res.status(401).json({ success: false, message: 'Não autorizado' });
         return;
       }
 
+      console.log('[ListBusinessProfilesController] Executando use case com userId:', userId);
       const result = await this.listUserBusinessProfiles.execute({ userId });
+      console.log('[ListBusinessProfilesController] Resultado:', result);
 
       res.status(200).json({
         success: true,
         data: result.businessProfiles
       });
     } catch (error: any) {
+      console.error('[ListBusinessProfilesController] Erro:', error);
       res.status(400).json({
         success: false,
         message: error.message || 'Erro ao listar organizações'
@@ -156,10 +163,11 @@ export class CreateBusinessProfileController implements IController {
       }
 
       const { 
-        companyName, 
+        companyName,
         tradingName, 
         cnpj, 
         whatsapp,
+        website,
         cep,
         street,
         number,
@@ -169,8 +177,7 @@ export class CreateBusinessProfileController implements IController {
         state,
         description,
         instagram,
-        facebook,
-        website
+        facebook
       } = req.body;
 
       if (!companyName) {

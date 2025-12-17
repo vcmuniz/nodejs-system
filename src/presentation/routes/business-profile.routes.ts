@@ -73,8 +73,20 @@ export const makeBusinessProfileRoutes = (prisma: PrismaClient) => {
    */
   router.get(
     "/",
-    authMiddleware.authenticate.bind(authMiddleware),
+    (req, res, next) => {
+      console.log('[business-profile.routes] GET / - Iniciando');
+      next();
+    },
+    authMiddleware.authenticate(),
+    (req, res, next) => {
+      console.log('[business-profile.routes] Após auth middleware');
+      next();
+    },
     requireNoBusinessProfile,
+    (req, res, next) => {
+      console.log('[business-profile.routes] Após requireNoBusinessProfile');
+      next();
+    },
     listController.handle.bind(listController)
   );
 
@@ -94,17 +106,43 @@ export const makeBusinessProfileRoutes = (prisma: PrismaClient) => {
    *           schema:
    *             type: object
    *             required:
-   *               - name
+   *               - companyName
    *             properties:
-   *               name:
+   *               companyName:
    *                 type: string
-   *               email:
+   *                 description: Nome da empresa
+   *               tradingName:
    *                 type: string
-   *               phone:
+   *                 description: Nome fantasia
+   *               cnpj:
+   *                 type: string
+   *               whatsapp:
+   *                 type: string
+   *               companyEmail:
    *                 type: string
    *               website:
    *                 type: string
    *               address:
+   *                 type: string
+   *               cep:
+   *                 type: string
+   *               street:
+   *                 type: string
+   *               number:
+   *                 type: string
+   *               complement:
+   *                 type: string
+   *               neighborhood:
+   *                 type: string
+   *               city:
+   *                 type: string
+   *               state:
+   *                 type: string
+   *               description:
+   *                 type: string
+   *               instagram:
+   *                 type: string
+   *               facebook:
    *                 type: string
    *     responses:
    *       201:
@@ -126,7 +164,7 @@ export const makeBusinessProfileRoutes = (prisma: PrismaClient) => {
    */
   router.post(
     "/create",
-    authMiddleware.authenticate.bind(authMiddleware),
+    authMiddleware.authenticate(),
     requireNoBusinessProfile,
     createController.handle.bind(createController)
   );
@@ -173,7 +211,7 @@ export const makeBusinessProfileRoutes = (prisma: PrismaClient) => {
    */
   router.post(
     "/select",
-    authMiddleware.authenticate.bind(authMiddleware),
+    authMiddleware.authenticate(),
     requireNoBusinessProfile,
     selectController.handle.bind(selectController)
   );
@@ -220,7 +258,7 @@ export const makeBusinessProfileRoutes = (prisma: PrismaClient) => {
    */
   router.post(
     "/switch",
-    authMiddleware.authenticate.bind(authMiddleware),
+    authMiddleware.authenticate(),
     // Não usa requireNoBusinessProfile pois JÁ precisa ter selecionado uma
     switchController.handle.bind(switchController)
   );
