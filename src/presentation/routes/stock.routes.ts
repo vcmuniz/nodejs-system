@@ -44,92 +44,13 @@ export function makeStockRoutes() {
     const stockRepository = makeStockEntryRepository();
     const productRepository = makeProductRepository();
 
-    /**
-     * @swagger
-     * /api/stocks:
-     *   post:
-     *     summary: Create a new stock entry
-     *     description: Add, remove or adjust stock for a product
-     *     tags: [Stock]
-     *     security:
-     *       - bearerAuth: []
-     *     requestBody:
-     *       required: true
-     *       content:
-     *         application/json:
-     *           schema:
-     *             type: object
-     *             required:
-     *               - productId
-     *               - type
-     *               - quantity
-     *             properties:
-     *               productId:
-     *                 type: string
-     *               type:
-     *                 type: string
-     *                 enum: [in, out, adjustment]
-     *               quantity:
-     *                 type: integer
-     *               reason:
-     *                 type: string
-     *     responses:
-     *       201:
-     *         description: Stock entry created
-     *         content:
-     *           application/json:
-     *             schema:
-     *               $ref: '#/components/schemas/StockEntry'
-     *       401:
-     *         description: Unauthorized
-     *       403:
-     *         description: No businessProfileId in token
-     */
-    router.post("/", authMiddleware.authenticate(), requireBusinessProfile, (req, res) => new CreateStockEntryController(stockRepository, productRepository).handle(req, res));
+    router.post("/", authMiddleware.authenticate(), requireBusinessProfile, (req, res) => 
+        new CreateStockEntryController(stockRepository, productRepository).handle(req, res)
+    );
     
-    /**
-     * @swagger
-     * /api/stocks:
-     *   get:
-     *     summary: List all stock entries
-     *     tags: [Stock]
-     *     security:
-     *       - bearerAuth: []
-     *     parameters:
-     *       - in: query
-     *         name: productId
-     *         schema:
-     *           type: string
-     *       - in: query
-     *         name: type
-     *         schema:
-     *           type: string
-     *           enum: [in, out, adjustment]
-     *       - in: query
-     *         name: startDate
-     *         schema:
-     *           type: string
-     *           format: date
-     *       - in: query
-     *         name: endDate
-     *         schema:
-     *           type: string
-     *           format: date
-     *     responses:
-     *       200:
-     *         description: List of stock entries
-     *         content:
-     *           application/json:
-     *             schema:
-     *               type: array
-     *               items:
-     *                 $ref: '#/components/schemas/StockEntry'
-     *       401:
-     *         description: Unauthorized
-     *       403:
-     *         description: No businessProfileId in token
-     */
-    router.get("/", authMiddleware.authenticate(), requireBusinessProfile, (req, res) => new ListStockEntriesController(stockRepository).handle(req, res));
+    router.get("/", authMiddleware.authenticate(), requireBusinessProfile, (req, res) => 
+        new ListStockEntriesController(stockRepository).handle(req, res)
+    );
 
     return router;
 }
