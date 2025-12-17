@@ -4,6 +4,7 @@ import { MessagingChannel, ConnectionStatus } from './MessagingChannel';
 export interface MessagingInstanceData {
   id: string;
   userId: string;
+  businessProfileId?: string; // ID do perfil de negócio (multi-tenant)
   name?: string; // Nome amigável para identificar a instância
   channel: MessagingChannel;
   channelInstanceId: string; // ID único no canal (ex: nome da instância no WhatsApp)
