@@ -5,6 +5,7 @@ import { makeCreateMessagingInstanceController } from '../controllers/messaging/
 import { makeListMessagingInstancesController } from '../controllers/messaging/ListMessagingInstancesController';
 import { makeGetInstanceQRCodeController } from '../controllers/messaging/GetInstanceQRCodeController';
 import { makeAuthMiddleware } from '../factories/middlewares/makeAuthMiddleware';
+import { requireBusinessProfile } from '../../middlewares/requireBusinessProfile';
 import { ProcessMessagingWebhook } from '../../usercase/messaging/ProcessMessagingWebhook';
 import { makeMessagingRepository } from '../../infra/database/factories/makeMessagingRepository';
 
@@ -318,6 +319,7 @@ export const makeMessagingRoutes = () => {
   router.get(
     '/instances',
     authMiddleware.authenticate(),
+    requireBusinessProfile,
     (req, res) => makeListMessagingInstancesController().handle(req, res)
   );
 
@@ -325,6 +327,7 @@ export const makeMessagingRoutes = () => {
   router.post(
     '/instance',
     authMiddleware.authenticate(),
+    requireBusinessProfile,
     (req, res) => makeCreateMessagingInstanceController().handle(req, res)
   );
 
@@ -332,6 +335,7 @@ export const makeMessagingRoutes = () => {
   router.post(
     '/message/send',
     authMiddleware.authenticate(),
+    requireBusinessProfile,
     (req, res) => makeSendMessageController().handle(req, res)
   );
 
@@ -381,6 +385,7 @@ export const makeMessagingRoutes = () => {
   router.get(
     '/instance/:instanceId/qrcode',
     authMiddleware.authenticate(),
+    requireBusinessProfile,
     (req, res) => makeGetInstanceQRCodeController().handle(req, res)
   );
 

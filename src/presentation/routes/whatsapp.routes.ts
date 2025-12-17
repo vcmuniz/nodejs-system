@@ -6,6 +6,7 @@ import { makeConnectInstanceController } from "../factories/whatsapp/makeConnect
 import { makeSendWhatsAppMessageController } from "../factories/whatsapp/makeSendWhatsAppMessageController";
 import { makeScheduleWhatsAppMessageController } from "../factories/whatsapp/makeScheduleWhatsAppMessageController";
 import { makeAuthMiddleware } from "../factories/middlewares/makeAuthMiddleware";
+import { requireBusinessProfile } from "../../middlewares/requireBusinessProfile";
 import { makeWhatsAppRepository } from "../../infra/database/factories/makeWhatsAppRepository";
 
 /**
@@ -147,32 +148,32 @@ export const makeWhatsAppRoutes = () => {
   const whatsAppRepository = makeWhatsAppRepository();
 
   // List user's instances (from local database)
-  router.get("/instances", authMiddleware.authenticate(), (req, res) =>
+  router.get("/instances", authMiddleware.authenticate(), requireBusinessProfile, (req, res) =>
     makeListUserInstancesController().handle(req, res)
   );
 
   // Create instance
-  router.post("/instance", authMiddleware.authenticate(), (req, res) =>
+  router.post("/instance", authMiddleware.authenticate(), requireBusinessProfile, (req, res) =>
     makeCreateInstanceController().handle(req, res)
   );
 
   // Get instance status
-  router.get("/instance/:instanceName", authMiddleware.authenticate(), (req, res) =>
+  router.get("/instance/:instanceName", authMiddleware.authenticate(), requireBusinessProfile, (req, res) =>
     makeGetInstanceStatusController().handle(req, res)
   );
 
   // Connect instance and get QR code
-  router.post("/instance/:instanceName/connect", authMiddleware.authenticate(), (req, res) =>
+  router.post("/instance/:instanceName/connect", authMiddleware.authenticate(), requireBusinessProfile, (req, res) =>
     makeConnectInstanceController().handle(req, res)
   );
 
   // Send message
-  router.post("/message/send", authMiddleware.authenticate(), (req, res) =>
+  router.post("/message/send", authMiddleware.authenticate(), requireBusinessProfile, (req, res) =>
     makeSendWhatsAppMessageController().handle(req, res)
   );
 
   // Schedule message
-  router.post("/message/schedule", authMiddleware.authenticate(), (req, res) =>
+  router.post("/message/schedule", authMiddleware.authenticate(), requireBusinessProfile, (req, res) =>
     makeScheduleWhatsAppMessageController().handle(req, res)
   );
 
