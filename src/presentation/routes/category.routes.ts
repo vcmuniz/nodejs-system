@@ -21,7 +21,7 @@ export function makeCategoryRoutes() {
 
     /**
      * @swagger
-     * /api/categories:
+     * /api/inventory/categories:
      *   post:
      *     summary: Create a new category
      *     tags: [Categories]
@@ -52,7 +52,7 @@ export function makeCategoryRoutes() {
     
     /**
      * @swagger
-     * /api/categories:
+     * /api/inventory/categories:
      *   get:
      *     summary: List all categories
      *     tags: [Categories]
@@ -88,7 +88,7 @@ export function makeCategoryRoutes() {
     
     /**
      * @swagger
-     * /api/categories/{id}:
+     * /api/inventory/categories/{id}:
      *   put:
      *     summary: Update a category
      *     tags: [Categories]
@@ -125,7 +125,7 @@ export function makeCategoryRoutes() {
     
     /**
      * @swagger
-     * /api/categories/{id}:
+     * /api/inventory/categories/{id}:
      *   delete:
      *     summary: Delete a category
      *     tags: [Categories]

@@ -29,7 +29,6 @@ export default (app: Express): void => {
     
     app.use("/api/inventory/products", makeProductRoutes());
     app.use("/api/inventory/categories", makeCategoryRoutes());
-    app.use("/api/categories", makeCategoryRoutes()); // Alias for easier access
     app.use("/api/inventory/stock", makeStockRoutes());
     app.use("/api/inventory/quotes", makeQuoteRoutes());
     
