@@ -1,10 +1,16 @@
 import { PrismaClient } from "@prisma/client";
+import { randomUUID } from "crypto";
 
 const prisma = new PrismaClient();
 
 export class PrismaProductRepository {
     async create(data: any) {
-        return prisma.products.create({ data });
+        const productData = {
+            id: randomUUID(),
+            updatedAt: new Date(),
+            ...data,
+        };
+        return prisma.products.create({ data: productData });
     }
 
     async findById(id: string) {
