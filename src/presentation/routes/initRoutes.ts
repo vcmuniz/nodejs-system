@@ -17,7 +17,7 @@ import { makeContactRoutes } from "./contacts.routes";
 import { makeLeadCaptureRoutes, makePublicLeadRoutes } from "./lead-captures.routes";
 import { makeBusinessProfileRoutes } from "./business-profile.routes";
 import { makeProductRoutes as makeNewProductRoutes } from "./products.routes";
-import uploadRoutes from "./uploadRoutes";
+import { makeUploadRoutes } from "./uploadRoutes";
 
 const prisma = new PrismaClient();
 
@@ -45,5 +45,5 @@ export default (app: Express): void => {
     app.use("/api/products", makeNewProductRoutes(prisma));
     
     // Upload API
-    app.use("/api/upload", uploadRoutes);
+    app.use("/api/upload", makeUploadRoutes());
 }
