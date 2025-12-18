@@ -104,19 +104,49 @@ const course = await prisma.products.create({
 
 ## 🚀 PRÓXIMOS PASSOS
 
-### FASE 2: Backend (Use Cases & Controllers)
-- [ ] Criar DTOs TypeScript para cada tipo
-- [ ] Atualizar CreateProduct use case
-- [ ] Atualizar UpdateProduct use case
-- [ ] Atualizar GetProduct use case (incluir dados específicos)
-- [ ] Validação com Zod por tipo
+### ✅ FASE 2: Backend (Use Cases & Repository) - COMPLETO!
 
-### FASE 3: API & Swagger
-- [ ] Atualizar rotas de produtos
-- [ ] Documentar novos campos no Swagger
-- [ ] Criar exemplos para cada tipo
+**Domain Layer (Entities & Interfaces):**
+- [x] Product entity com ProductType enum
+- [x] Interfaces para dados específicos de cada tipo
+- [x] IProductRepository port (Hexagonal Architecture)
 
-### FASE 4: Frontend
+**Use Cases (Application Layer - SOLID):**
+- [x] CreateProduct (SRP + validações de negócio)
+- [x] GetProduct (DIP)
+- [x] ListProducts (ISP + filtros)
+- [x] UpdateProduct (OCP)
+- [x] DeleteProduct (LSP)
+
+**Infrastructure Layer (Adapters):**
+- [x] PrismaProductRepository (implementa IProductRepository)
+- [x] Suporte para todos os 6 tipos
+- [x] Transações para consistência
+- [x] Mapeamento de dados específicos
+
+**Commits:**
+- 0e11dd7 - Domain layer e Use Cases
+- 976259c - Repository adapter
+
+---
+
+### FASE 3: Presentation Layer (Controllers & Routes)
+- [ ] CreateProductController
+- [ ] GetProductController
+- [ ] ListProductsController
+- [ ] UpdateProductController
+- [ ] DeleteProductController
+- [ ] Factory functions (Dependency Injection)
+- [ ] Product routes
+- [ ] Request validation (Zod schemas)
+
+### FASE 4: API Documentation
+- [ ] Atualizar Swagger para produtos
+- [ ] Documentar cada tipo de produto
+- [ ] Exemplos de request/response para cada tipo
+- [ ] Schemas OpenAPI
+
+### FASE 5: Frontend
 - [ ] Seletor de tipo de produto
 - [ ] Formulários dinâmicos por tipo
 - [ ] Validações client-side
