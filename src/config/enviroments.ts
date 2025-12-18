@@ -11,4 +11,6 @@ export const ENV = {
     APP_DOMAIN: process.env.APP_DOMAIN || 'http://localhost:3000',
     EVOLUTION_API_URL: process.env.EVOLUTION_API_URL || 'http://localhost:8080',
     EVOLUTION_API_KEY: process.env.EVOLUTION_API_KEY || '',
+    KAFKA_BROKERS: process.env.KAFKA_BROKERS || 'localhost:9092',
+    KAFKA_ENABLED: process.env.KAFKA_ENABLED === 'true',
 };

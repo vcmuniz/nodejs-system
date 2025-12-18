@@ -6,6 +6,7 @@ import { initMiddleware } from "./middlewares";
 import { PrismaClient } from "@prisma/client";
 import { WhatsAppFactory } from "./infra/factories/whatsapp/WhatsAppFactory";
 import { UploadFactory } from "./infra/factories/upload/UploadFactory";
+import { makeMessageConsumer } from "./infra/kafka/factories/makeMessageConsumer";
 
 const server = async () => {
     const app = express();
@@ -14,6 +15,15 @@ const server = async () => {
     const prisma = new PrismaClient();
     WhatsAppFactory.initialize(prisma);
     UploadFactory.initialize(prisma);
+    
+    // Inicializar Kafka Consumer (se habilitado)
+    const messageConsumer = makeMessageConsumer();
+    if (messageConsumer) {
+        console.log('[App] Iniciando Kafka consumer...');
+        await messageConsumer.start();
+    } else {
+        console.log('[App] Kafka consumer desabilitado');
+    }
     
     // Servir arquivos estáticos ANTES DE TUDO
     const path = require('path');

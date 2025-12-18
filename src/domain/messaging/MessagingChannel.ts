@@ -23,6 +23,8 @@ export enum MessagingEventType {
 // Status de mensagens
 export enum MessageStatus {
   PENDING = 'pending',
+  QUEUED = 'queued',
+  PROCESSING = 'processing',
   SENT = 'sent',
   DELIVERED = 'delivered',
   READ = 'read',
