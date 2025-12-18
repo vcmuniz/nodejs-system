@@ -45,6 +45,7 @@ model business_profiles {
   productsRelation        products[]
   quotesRelation          quotes[]
   stockEntriesRelation    stock_entries[]
+  uploadedFilesRelation   uploaded_files[]
 
   @@index([userId])
 }
@@ -496,6 +497,7 @@ model users {
   contacts              contacts[]
   lead_captures         lead_captures[]
   contact_activities    contact_activities[]
+  uploaded_files        uploaded_files[]
 }
 
 model whatsapp_instances {
@@ -670,5 +672,25 @@ model contact_activities {
   
   @@index([contactId])
   @@index([type])
+  @@index([createdAt])
+}
+
+model uploaded_files {
+  id                String            @id
+  filename          String
+  originalName      String
+  mimeType          String
+  size              Int
+  url               String
+  path              String
+  userId            String
+  businessProfileId String
+  createdAt         DateTime          @default(now())
+  
+  user              users             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  businessProfile   business_profiles @relation(fields: [businessProfileId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+  @@index([businessProfileId])
   @@index([createdAt])
 }

@@ -140,23 +140,42 @@ export class EvolutionAPIImpl implements IEvolutionAPI {
     request: SendWhatsAppMessageRequest,
   ): Promise<SendWhatsAppMessageResponse> {
     try {
-      const payload = {
-        number: request.number,
-        text: request.text,
-        mediaUrl: request.mediaUrl,
-        mediaType: request.mediaType,
-      };
-      
-      console.log('[EvolutionAPI] Enviando mensagem:');
-      console.log('  Instance:', instanceName);
-      console.log('  Payload:', JSON.stringify(payload, null, 2));
-      console.log('  URL:', `/message/sendText/${instanceName}`);
-      
-      const response = await this.client.post(`/message/sendText/${instanceName}`, payload);
-      
-      console.log('[EvolutionAPI] Resposta:', JSON.stringify(response.data, null, 2));
-      
-      return response.data;
+      // Se tem mídia, usa sendMedia, senão usa sendText
+      if (request.mediaUrl) {
+        const payload = {
+          number: request.number,
+          mediatype: request.mediaType || 'image',
+          media: request.mediaUrl,
+          caption: request.text || '',
+        };
+        
+        console.log('[EvolutionAPI] Enviando mensagem com mídia:');
+        console.log('  Instance:', instanceName);
+        console.log('  Payload:', JSON.stringify(payload, null, 2));
+        console.log('  URL:', `/message/sendMedia/${instanceName}`);
+        
+        const response = await this.client.post(`/message/sendMedia/${instanceName}`, payload);
+        
+        console.log('[EvolutionAPI] Resposta:', JSON.stringify(response.data, null, 2));
+        
+        return response.data;
+      } else {
+        const payload = {
+          number: request.number,
+          text: request.text,
+        };
+        
+        console.log('[EvolutionAPI] Enviando mensagem de texto:');
+        console.log('  Instance:', instanceName);
+        console.log('  Payload:', JSON.stringify(payload, null, 2));
+        console.log('  URL:', `/message/sendText/${instanceName}`);
+        
+        const response = await this.client.post(`/message/sendText/${instanceName}`, payload);
+        
+        console.log('[EvolutionAPI] Resposta:', JSON.stringify(response.data, null, 2));
+        
+        return response.data;
+      }
     } catch (error) {
       this.handleError(error, 'Erro ao enviar mensagem');
     }

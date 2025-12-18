@@ -5,6 +5,7 @@ import initRoutes from "./presentation/routes/initRoutes";
 import { initMiddleware } from "./middlewares";
 import { PrismaClient } from "@prisma/client";
 import { WhatsAppFactory } from "./infra/factories/whatsapp/WhatsAppFactory";
+import { UploadFactory } from "./infra/factories/upload/UploadFactory";
 
 const server = async () => {
     const app = express();
@@ -12,6 +13,7 @@ const server = async () => {
     // Inicializar WhatsApp Factory
     const prisma = new PrismaClient();
     WhatsAppFactory.initialize(prisma);
+    UploadFactory.initialize(prisma);
     
     app.get("/api-docs/swagger.json", (req, res) => {
         res.json(swaggerSpec);
