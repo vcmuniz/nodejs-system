@@ -30,12 +30,14 @@ export class PrismaProductRepository implements IProductRepository {
           description: data.description,
           sku: data.sku,
           price: data.price,
-          quantity: data.physicalData?.stock ?? 0, // Backward compatibility
-          image: data.images?.[0], // Backward compatibility
+          quantity: data.physicalData?.stock ?? 0,
+          image: data.images?.[0] || null,
           type: data.type,
-          images: data.images ? JSON.stringify(data.images) : null,
-          metadata: data.metadata ? JSON.stringify(data.metadata) : null,
+          images: data.images ? data.images as any : undefined,
+          metadata: data.metadata ? data.metadata as any : undefined,
           isActive: data.isActive ?? true,
+          createdAt: new Date(),
+          updatedAt: new Date(),
         },
       });
 
@@ -56,17 +58,19 @@ export class PrismaProductRepository implements IProductRepository {
   ): Promise<CompleteProductData> {
     await this.prisma.$transaction(async (tx) => {
       // Atualiza produto base
-      const updateData: any = {};
+      const updateData: any = {
+        updatedAt: new Date(),
+      };
       
       if (data.name !== undefined) updateData.name = data.name;
       if (data.description !== undefined) updateData.description = data.description;
       if (data.price !== undefined) updateData.price = data.price;
       if (data.images !== undefined) {
-        updateData.images = JSON.stringify(data.images);
-        updateData.image = data.images[0] ?? null; // Backward compatibility
+        updateData.images = data.images as any;
+        updateData.image = data.images[0] ?? null;
       }
       if (data.metadata !== undefined) {
-        updateData.metadata = JSON.stringify(data.metadata);
+        updateData.metadata = data.metadata as any;
       }
       if (data.isActive !== undefined) updateData.isActive = data.isActive;
 
@@ -201,9 +205,7 @@ export class PrismaProductRepository implements IProductRepository {
               width: data.physicalData.width,
               height: data.physicalData.height,
               depth: data.physicalData.depth,
-              variations: data.physicalData.variations
-                ? JSON.stringify(data.physicalData.variations)
-                : null,
+              variations: data.physicalData.variations as any,
             },
           });
         }
@@ -219,10 +221,10 @@ export class PrismaProductRepository implements IProductRepository {
               scheduling: data.serviceData.scheduling ?? false,
               location: data.serviceData.location,
               professionals: data.serviceData.professionals
-                ? JSON.stringify(data.serviceData.professionals)
+                ? data.serviceData.professionals as any
                 : null,
               extras: data.serviceData.extras
-                ? JSON.stringify(data.serviceData.extras)
+                ? data.serviceData.extras as any
                 : null,
             },
           });
@@ -243,7 +245,7 @@ export class PrismaProductRepository implements IProductRepository {
               accessDays: data.courseData.accessDays,
               level: data.courseData.level,
               content: data.courseData.content
-                ? JSON.stringify(data.courseData.content)
+                ? data.courseData.content as any
                 : null,
             },
           });
@@ -277,7 +279,7 @@ export class PrismaProductRepository implements IProductRepository {
               trialDays: data.subscriptionData.trialDays,
               maxUsers: data.subscriptionData.maxUsers ?? 1,
               benefits: data.subscriptionData.benefits
-                ? JSON.stringify(data.subscriptionData.benefits)
+                ? data.subscriptionData.benefits as any
                 : null,
             },
           });
@@ -319,7 +321,7 @@ export class PrismaProductRepository implements IProductRepository {
           height: data.physicalData.height,
           depth: data.physicalData.depth,
           variations: data.physicalData.variations
-            ? JSON.stringify(data.physicalData.variations)
+            ? data.physicalData.variations as any
             : undefined,
         },
         create: {
@@ -332,7 +334,7 @@ export class PrismaProductRepository implements IProductRepository {
           height: data.physicalData.height,
           depth: data.physicalData.depth,
           variations: data.physicalData.variations
-            ? JSON.stringify(data.physicalData.variations)
+            ? data.physicalData.variations as any
             : null,
         },
       });
@@ -353,8 +355,8 @@ export class PrismaProductRepository implements IProductRepository {
       sku: product.sku,
       price: product.price,
       type: product.type as ProductType,
-      images: product.images ? JSON.parse(product.images as string) : [],
-      metadata: product.metadata ? JSON.parse(product.metadata as string) : {},
+      images: product.images ? (Array.isArray(product.images) ? product.images : JSON.parse(product.images as string)) : [],
+      metadata: product.metadata ? (typeof product.metadata === 'object' ? product.metadata : JSON.parse(product.metadata as string)) : {},
       isActive: product.isActive,
       createdAt: product.createdAt,
       updatedAt: product.updatedAt,
@@ -374,7 +376,7 @@ export class PrismaProductRepository implements IProductRepository {
         height: product.physicalData.height,
         depth: product.physicalData.depth,
         variations: product.physicalData.variations
-          ? JSON.parse(product.physicalData.variations as string)
+          ? (typeof product.physicalData.variations === 'object' ? product.physicalData.variations : JSON.parse(product.physicalData.variations as string))
           : undefined,
       };
     }
@@ -385,10 +387,10 @@ export class PrismaProductRepository implements IProductRepository {
         scheduling: product.serviceData.scheduling,
         location: product.serviceData.location,
         professionals: product.serviceData.professionals
-          ? JSON.parse(product.serviceData.professionals as string)
+          ? (Array.isArray(product.serviceData.professionals) ? product.serviceData.professionals : JSON.parse(product.serviceData.professionals as string))
           : undefined,
         extras: product.serviceData.extras
-          ? JSON.parse(product.serviceData.extras as string)
+          ? (typeof product.serviceData.extras === 'object' ? product.serviceData.extras : JSON.parse(product.serviceData.extras as string))
           : undefined,
       };
     }
@@ -403,7 +405,7 @@ export class PrismaProductRepository implements IProductRepository {
         accessDays: product.courseData.accessDays,
         level: product.courseData.level,
         content: product.courseData.content
-          ? JSON.parse(product.courseData.content as string)
+          ? (typeof product.courseData.content === 'object' ? product.courseData.content : JSON.parse(product.courseData.content as string))
           : undefined,
       };
     }
@@ -425,7 +427,7 @@ export class PrismaProductRepository implements IProductRepository {
         trialDays: product.subscriptionData.trialDays,
         maxUsers: product.subscriptionData.maxUsers,
         benefits: product.subscriptionData.benefits
-          ? JSON.parse(product.subscriptionData.benefits as string)
+          ? (Array.isArray(product.subscriptionData.benefits) ? product.subscriptionData.benefits : JSON.parse(product.subscriptionData.benefits as string))
           : undefined,
       };
     }
