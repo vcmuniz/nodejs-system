@@ -198,13 +198,10 @@ export const makeBusinessProfileRoutes = (prisma: PrismaClient) => {
    *                   description: New JWT token with businessProfileId
    *       401:
    *         description: Unauthorized
-   *       403:
-   *         description: Token already has businessProfileId
    */
   router.post(
     "/create",
     authMiddleware.authenticate(),
-    requireNoBusinessProfile,
     createController.handle.bind(createController)
   );
 
