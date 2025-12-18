@@ -1,14 +1,15 @@
 // Controller - List Products
 // Presentation Layer
 
-import { Request, Response } from 'express';
+import { Response } from 'express';
+import { AuthenticatedRequest } from '../../interfaces/AuthenticatedRequest';
 import { ListProducts } from '../../../usercase/products/ListProducts';
 import { ProductType } from '../../../domain/products/Product';
 
 export class ListProductsController {
   constructor(private readonly listProducts: ListProducts) {}
 
-  async handle(req: Request, res: Response): Promise<Response> {
+  async handle(req: AuthenticatedRequest, res: Response): Promise<Response> {
     try {
       const userId = req.user!.id;
       const businessProfileId = req.user!.businessProfileId;

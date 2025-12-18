@@ -1,13 +1,14 @@
 // Controller - Update Product
 // Presentation Layer
 
-import { Request, Response } from 'express';
+import { Response } from 'express';
+import { AuthenticatedRequest } from '../../interfaces/AuthenticatedRequest';
 import { UpdateProduct } from '../../../usercase/products/UpdateProduct';
 
 export class UpdateProductController {
   constructor(private readonly updateProduct: UpdateProduct) {}
 
-  async handle(req: Request, res: Response): Promise<Response> {
+  async handle(req: AuthenticatedRequest, res: Response): Promise<Response> {
     try {
       const userId = req.user!.id;
       const { id } = req.params;

@@ -1,13 +1,14 @@
 // Controller - Delete Product
 // Presentation Layer
 
-import { Request, Response } from 'express';
+import { Response } from 'express';
+import { AuthenticatedRequest } from '../../interfaces/AuthenticatedRequest';
 import { DeleteProduct } from '../../../usercase/products/DeleteProduct';
 
 export class DeleteProductController {
   constructor(private readonly deleteProduct: DeleteProduct) {}
 
-  async handle(req: Request, res: Response): Promise<Response> {
+  async handle(req: AuthenticatedRequest, res: Response): Promise<Response> {
     try {
       const userId = req.user!.id;
       const { id } = req.params;

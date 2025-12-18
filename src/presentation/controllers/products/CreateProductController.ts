@@ -1,14 +1,15 @@
 // Controller - Create Product
 // Presentation Layer (Clean Architecture)
 
-import { Request, Response } from 'express';
+import { Response } from 'express';
+import { AuthenticatedRequest } from '../../interfaces/AuthenticatedRequest';
 import { CreateProduct } from '../../../usercase/products/CreateProduct';
 import { ProductType } from '../../../domain/products/Product';
 
 export class CreateProductController {
   constructor(private readonly createProduct: CreateProduct) {}
 
-  async handle(req: Request, res: Response): Promise<Response> {
+  async handle(req: AuthenticatedRequest, res: Response): Promise<Response> {
     try {
       const userId = req.user!.id;
       const businessProfileId = req.user!.businessProfileId;

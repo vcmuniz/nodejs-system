@@ -1,13 +1,14 @@
 // Controller - Get Product By ID
 // Presentation Layer
 
-import { Request, Response } from 'express';
+import { Response } from 'express';
+import { AuthenticatedRequest } from '../../interfaces/AuthenticatedRequest';
 import { GetProduct } from '../../../usercase/products/GetProduct';
 
 export class GetProductController {
   constructor(private readonly getProduct: GetProduct) {}
 
-  async handle(req: Request, res: Response): Promise<Response> {
+  async handle(req: AuthenticatedRequest, res: Response): Promise<Response> {
     try {
       const userId = req.user!.id;
       const { id } = req.params;
