@@ -1,10 +1,16 @@
 import { PrismaClient } from "@prisma/client";
+import { randomUUID } from "crypto";
 
 const prisma = new PrismaClient();
 
 export class PrismaCategoryRepository {
     async create(data: any) {
-        return prisma.categories.create({ data });
+        const categoryData = {
+            id: randomUUID(),
+            updatedAt: new Date(),
+            ...data,
+        };
+        return prisma.categories.create({ data: categoryData });
     }
 
     async findById(id: string) {
