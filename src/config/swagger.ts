@@ -570,6 +570,36 @@ const options = {
           },
           required: ['id', 'groupId', 'identifier', 'identifierType', 'isActive'],
         },
+        UploadFile: {
+          type: 'object',
+          properties: {
+            id: {
+              type: 'string',
+              example: '123e4567-e89b-12d3-a456-426614174000',
+            },
+            filename: {
+              type: 'string',
+              example: '123e4567-e89b-12d3-a456-426614174000.jpg',
+            },
+            originalName: {
+              type: 'string',
+              example: 'foto.jpg',
+            },
+            mimeType: {
+              type: 'string',
+              example: 'image/jpeg',
+            },
+            size: {
+              type: 'number',
+              example: 245678,
+            },
+            url: {
+              type: 'string',
+              example: 'http://localhost:3000/uploads/business_123/123e4567-e89b-12d3-a456-426614174000.jpg',
+            },
+          },
+          required: ['id', 'filename', 'originalName', 'mimeType', 'size', 'url'],
+        },
       },
     },
   },

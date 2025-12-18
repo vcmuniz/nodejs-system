@@ -17,7 +17,7 @@ import { makeContactRoutes } from "./contacts.routes";
 import { makeLeadCaptureRoutes, makePublicLeadRoutes } from "./lead-captures.routes";
 import { makeBusinessProfileRoutes } from "./business-profile.routes";
 import { makeProductRoutes as makeNewProductRoutes } from "./products.routes";
-import { makeUploadRoutes } from "./uploadRoutes";
+import { makeUploadRoutes } from "./upload.routes";
 
 const prisma = new PrismaClient();
 

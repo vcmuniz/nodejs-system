@@ -1,4 +1,5 @@
 import { IFileStorageService } from '../../ports/upload/IFileStorageService';
+import { ENV } from '../../config/enviroments';
 import fs from 'fs/promises';
 import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
@@ -7,9 +8,9 @@ export class LocalFileStorageService implements IFileStorageService {
   private baseDir: string;
   private baseUrl: string;
 
-  constructor(baseDir: string = './uploads', baseUrl: string = 'http://localhost:3000') {
+  constructor(baseDir: string = './uploads', baseUrl?: string) {
     this.baseDir = baseDir;
-    this.baseUrl = baseUrl;
+    this.baseUrl = baseUrl || ENV.APP_DOMAIN;
   }
 
   async saveFile(file: Express.Multer.File, subPath: string = ''): Promise<{ path: string; url: string }> {
