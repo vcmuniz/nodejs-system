@@ -15,12 +15,10 @@ const server = async () => {
     WhatsAppFactory.initialize(prisma);
     UploadFactory.initialize(prisma);
     
-    // Servir arquivos estáticos ANTES DE TUDO - não passar por outros middlewares
-    const uploadsPath = require('path').join(process.cwd(), 'uploads');
-    app.get('/uploads/*', (req, res, next) => {
-        const filePath = req.path.replace('/uploads/', '');
-        res.sendFile(filePath, { root: uploadsPath });
-    });
+    // Servir arquivos estáticos ANTES DE TUDO
+    const path = require('path');
+    const uploadsPath = path.join(process.cwd(), 'uploads');
+    app.use('/uploads', express.static(uploadsPath));
     
     app.get("/api-docs/swagger.json", (req, res) => {
         res.json(swaggerSpec);
