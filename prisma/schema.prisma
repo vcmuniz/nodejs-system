@@ -207,20 +207,146 @@ model products {
   description       String?            @db.Text
   sku               String
   price             Float
-  quantity          Int
-  image             String?
+  quantity          Int                // Mantido para compatibilidade (usado para PHYSICAL)
+  image             String?            // Mantido para compatibilidade
+  
+  // Novo: Tipo de produto
+  type              ProductType        @default(PHYSICAL)
+  
+  // Novo: Imagens múltiplas (JSON)
+  images            Json?
+  
+  // Novo: Metadados extras flexíveis
+  metadata          Json?
+  
+  isActive          Boolean            @default(true)
   createdAt         DateTime           @default(now())
   updatedAt         DateTime
+  
+  // Relacionamentos existentes
   categories        categories         @relation(fields: [categoryId], references: [id], onDelete: Cascade)
   users             users              @relation(fields: [userId], references: [id], onDelete: Cascade)
   businessProfile   business_profiles? @relation(fields: [businessProfileId], references: [id], onDelete: Cascade)
   quote_items       quote_items[]
   stock_entries     stock_entries[]
+  
+  // Novos relacionamentos com tabelas específicas por tipo
+  physicalData      ProductPhysical?
+  serviceData       ProductService?
+  courseData        ProductCourse?
+  digitalData       ProductDigital?
+  subscriptionData  ProductSubscription?
+  eventData         ProductEvent?
 
   @@unique([userId, sku])
   @@index([categoryId])
   @@index([userId])
   @@index([businessProfileId])
+  @@index([type])
+}
+
+enum ProductType {
+  PHYSICAL
+  SERVICE
+  COURSE
+  DIGITAL
+  SUBSCRIPTION
+  EVENT
+}
+
+model ProductPhysical {
+  id        String   @id @default(uuid())
+  productId String   @unique
+  product   products @relation(fields: [productId], references: [id], onDelete: Cascade)
+  
+  stock     Int      @default(0)
+  sku       String?
+  weight    Float?
+  width     Float?
+  height    Float?
+  depth     Float?
+  variations Json?
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ProductService {
+  id            String   @id @default(uuid())
+  productId     String   @unique
+  product       products @relation(fields: [productId], references: [id], onDelete: Cascade)
+  
+  duration      Int?
+  scheduling    Boolean  @default(false)
+  location      String?
+  professionals Json?
+  extras        Json?
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model ProductCourse {
+  id            String   @id @default(uuid())
+  productId     String   @unique
+  product       products @relation(fields: [productId], references: [id], onDelete: Cascade)
+  
+  platform      String?
+  modules       Int?
+  lessons       Int?
+  durationHours Int?
+  certificate   Boolean  @default(false)
+  accessDays    Int?
+  level         String?
+  content       Json?
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model ProductDigital {
+  id             String   @id @default(uuid())
+  productId      String   @unique
+  product        products @relation(fields: [productId], references: [id], onDelete: Cascade)
+  
+  fileUrl        String?
+  fileSize       Int?
+  fileType       String?
+  downloadLimit  Int?
+  licenseType    String?
+  expirationDays Int?
+  
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model ProductSubscription {
+  id           String   @id @default(uuid())
+  productId    String   @unique
+  product      products @relation(fields: [productId], references: [id], onDelete: Cascade)
+  
+  billingCycle String?
+  trialDays    Int?
+  maxUsers     Int?     @default(1)
+  benefits     Json?
+  
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model ProductEvent {
+  id          String    @id @default(uuid())
+  productId   String    @unique
+  product     products  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  
+  eventDate   DateTime?
+  location    String?
+  capacity    Int?
+  ticketsSold Int       @default(0)
+  category    String?
+  
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 }
 
 model quote_items {
