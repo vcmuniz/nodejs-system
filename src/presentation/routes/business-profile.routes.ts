@@ -92,6 +92,45 @@ export const makeBusinessProfileRoutes = (prisma: PrismaClient) => {
 
   /**
    * @swagger
+   * /api/business-profiles/list:
+   *   get:
+   *     summary: List all business profiles (for dropdown)
+   *     description: Returns all business profiles that the user has access to, regardless of current selection. Used for switcher dropdown.
+   *     tags: [Business Profiles]
+   *     security:
+   *       - bearerAuth: []
+   *     responses:
+   *       200:
+   *         description: List of business profiles
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: array
+   *               items:
+   *                 type: object
+   *                 properties:
+   *                   id:
+   *                     type: string
+   *                   name:
+   *                     type: string
+   *                   email:
+   *                     type: string
+   *                   phone:
+   *                     type: string
+   *                   createdAt:
+   *                     type: string
+   *                     format: date-time
+   *       401:
+   *         description: Unauthorized
+   */
+  router.get(
+    "/list",
+    authMiddleware.authenticate(),
+    listController.handle.bind(listController)
+  );
+
+  /**
+   * @swagger
    * /api/business-profiles/create:
    *   post:
    *     summary: Create a new business profile
