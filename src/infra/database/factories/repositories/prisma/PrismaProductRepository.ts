@@ -5,12 +5,69 @@ const prisma = new PrismaClient();
 
 export class PrismaProductRepository {
     async create(data: any) {
-        const productData = {
+        // Extrai quantity do tipo específico ou usa 0 como padrão
+        let quantity = data.quantity || 0;
+        
+        // Extrai dados específicos do tipo
+        const { physicalData, serviceData, courseData, digitalData, subscriptionData, eventData, ...productData } = data;
+        
+        if (data.type === 'PHYSICAL' && physicalData?.stock !== undefined) {
+            quantity = physicalData.stock;
+        }
+        
+        const finalData: any = {
             id: randomUUID(),
             updatedAt: new Date(),
-            ...data,
+            ...productData,
+            quantity,
         };
-        return prisma.products.create({ data: productData });
+        
+        // Adiciona relacionamento com dados específicos se existirem
+        if (data.type === 'PHYSICAL' && physicalData) {
+            finalData.physicalData = {
+                create: {
+                    ...physicalData,
+                    id: randomUUID(),
+                }
+            };
+        } else if (data.type === 'SERVICE' && serviceData) {
+            finalData.serviceData = {
+                create: {
+                    ...serviceData,
+                    id: randomUUID(),
+                }
+            };
+        } else if (data.type === 'COURSE' && courseData) {
+            finalData.courseData = {
+                create: {
+                    ...courseData,
+                    id: randomUUID(),
+                }
+            };
+        } else if (data.type === 'DIGITAL' && digitalData) {
+            finalData.digitalData = {
+                create: {
+                    ...digitalData,
+                    id: randomUUID(),
+                }
+            };
+        } else if (data.type === 'SUBSCRIPTION' && subscriptionData) {
+            finalData.subscriptionData = {
+                create: {
+                    ...subscriptionData,
+                    id: randomUUID(),
+                }
+            };
+        } else if (data.type === 'EVENT' && eventData) {
+            finalData.eventData = {
+                create: {
+                    ...eventData,
+                    id: randomUUID(),
+                }
+            };
+        }
+        
+        return prisma.products.create({ data: finalData });
     }
 
     async findById(id: string) {
